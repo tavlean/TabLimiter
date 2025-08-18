@@ -10,7 +10,7 @@
 		"128": "icons/128.png"
 	},
 
-	"browser_action": {
+	"action": {
 		"default_icon": {
 			"48": "icons/48.png",
 			"128": "icons/128.png"
@@ -20,13 +20,12 @@
 	},
 	"options_page": "options.html",
 	"background": {
-		"scripts": [
-			"background.js"
-		]
+		"service_worker": "background.js"
 	},
 	"permissions": [
-		"storage"
+		"storage",
+		"notifications"
 	],
 
-	"manifest_version": 2
+	"manifest_version": 3
 }

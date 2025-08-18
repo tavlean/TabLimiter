@@ -1,8 +1,6 @@
-const browser = chrome || browser
-
 const tabQuery = (options, params = {}) => new Promise(res => {
 	if (!options.countPinnedTabs) params.pinned = false // only non-pinned tabs
-	browser.tabs.query(params, tabs => res(tabs))
+	chrome.tabs.query(params, tabs => res(tabs))
 })
 
 const windowRemaining = options =>
@@ -15,7 +13,7 @@ const totalRemaining = options =>
 
 const updateBadge = options => {
 	if (!options.displayBadge) {
-		browser.browserAction.setBadgeText({ text: "" })
+		chrome.action.setBadgeText({ text: "" })
 		return;
 	}
 
@@ -23,7 +21,7 @@ const updateBadge = options => {
 	.then(remaining => {
 		// console.log(remaining)
 		// remaining = [remainingInWindow, remainingInTotal]
-		browser.browserAction.setBadgeText({
+		chrome.action.setBadgeText({
 			text: Math.min(...remaining).toString()
 		})
 	})
@@ -69,8 +67,8 @@ const detectTooManyTabsInTotal = options => new Promise(res => {
 
 // get user options from storage
 const getOptions = () => new Promise((res, rej) => {
-	browser.storage.sync.get("defaultOptions", (defaults) => {
-		browser.storage.sync.get(defaults.defaultOptions, (options) => {
+	chrome.storage.sync.get("defaultOptions", (defaults) => {
+		chrome.storage.sync.get(defaults.defaultOptions, (options) => {
 			// console.log(options);
 			res(options);
 		})
@@ -104,123 +102,114 @@ const displayAlert = (options, place) => new Promise((res, rej) => {
 		/{\s*(\S+)\s*}/g,
 		replacer
 	)
-	alert(renderedMessage);
+	
+	// Use notifications instead of alert() for Manifest V3
+	chrome.notifications.create({
+		type: 'basic',
+		iconUrl: 'icons/48.png',
+		title: 'Tab Limiter',
+		message: renderedMessage
+	});
 })
 
-let tabCount = -1
-let previousTabCount = -1
-let amountOfTabsCreated = -1
+// For Manifest V3 service worker, we need to track state differently
+// We'll use a simple approach without global state since service workers are ephemeral
 
-// resolves amount of tabs created
-const updateTabCount = () => new Promise(res => browser.tabs.query({}, tabs => {
-	if (tabs.length == tabCount) {
-		// console.log("amount of tabs didn't change")
-		// if amount of tabs didn't change, don't update values
-		return res(amountOfTabsCreated);
-	}
+// resolves amount of tabs created based on current tab count
+const getTabCount = () => new Promise(res => chrome.tabs.query({}, tabs => res(tabs.length)))
 
-	previousTabCount = tabCount
-	tabCount = tabs.length
-	amountOfTabsCreated =
-		~previousTabCount ? tabCount - previousTabCount : 0
-	// console.log(
-	// 	"tabCount: ", tabCount,
-	// 	" - previousTabCount: ", previousTabCount,
-	// 	" - created: ", amountOfTabsCreated
-	// )
-	res(amountOfTabsCreated)
-}))
-
-let passes = 0;
-
+// Handle tab creation with Manifest V3 service worker
 const handleExceedTabs = (tab, options, place) => {
 	console.log(place)
 	if (options.exceedTabNewWindow && place === "window") {
-		browser.windows.create({ tabId: tab.id, focused: true});
+		chrome.windows.create({ tabId: tab.id, focused: true});
 	} else {
-		browser.tabs.remove(tab.id);
+		chrome.tabs.remove(tab.id);
 	}
 }
 
-const handleTabCreated = tab => options => {
-	return Promise.race([
-		detectTooManyTabsInWindow(options),
-		detectTooManyTabsInTotal(options)
-	])
-	.then((place) => updateTabCount().then(amountOfTabsCreated => {
-		// if this tab gets a pass, don't alert about it or remove it
-		if (passes > 0) {
-			console.log("passed with pass no. ", passes)
-			passes--;
-			return;
-		}
-		console.log("amountOfTabsCreated", amountOfTabsCreated)
-		displayAlert(options, place) // alert about opening too many tabs
-		if (amountOfTabsCreated === 1) {
-			// if exactly one tab was created, remove this tab
-			handleExceedTabs(tab, options, place);
-			app.update()
-		} else if (amountOfTabsCreated > 1) {
-			// if more than one tab was created, don't remove the tab and let
-			// the other created tabs pass, such that there is no alert for
-			// them. More than one tab can be created at once through session
-			// restore or by pressing ctrl+shift+t
-			passes = amountOfTabsCreated - 1
-		} else if (amountOfTabsCreated === -1) {
-			// if the users spams ctrl+t to create multiple tabs and one was
-			// just removed by this extension, remove the other tabs as well
-			handleExceedTabs(tab, options, place);
-			app.update()
-		} else {
-			// should never happen
-			throw new Error("weird: multiple tabs closed after tab created")
-		}
-	}))
-}
-
-const app = {
-	init: function() {
-		browser.storage.sync.set({
-			defaultOptions: {
-				maxTotal: 50,
-				maxWindow: 20,
-				exceedTabNewWindow: false,
-				displayAlert: true,
-				countPinnedTabs: false,
-				displayBadge: false,
-				alertMessage: "You decided not to open more than {maxPlace} tabs in {place}"
-			}
-		});
-
-		//
-		// Event handlers
-		//
-
-		// only add this event listener after startup
-		// to prevent restored tabs from being deleted
-		browser.tabs.onCreated.addListener(tab =>
-			getOptions().then(handleTabCreated(tab))
-		)
-
-		console.log("init", this)
-		// Update Badge when…
-		// …window focus changes
-		browser.windows.onFocusChanged.addListener(app.update)
-		// …a tab is created
-		browser.tabs.onCreated.addListener(app.update)
-		// …a tab is deleted
-		browser.tabs.onRemoved.addListener(app.update)
-		// …a tab is updated
-		browser.tabs.onUpdated.addListener(app.update)
-	},
-	update: () => {
-		updateTabCount();
-		getOptions().then(updateBadge)
-	}
+const handleTabCreated = (tab) => {
+	return getOptions().then(options => {
+		return Promise.race([
+			detectTooManyTabsInWindow(options),
+			detectTooManyTabsInTotal(options)
+		])
+		.then((place) => {
+			console.log("Tab creation detected, checking limits...")
+			displayAlert(options, place) // alert about opening too many tabs
+			
+			// For Manifest V3, we simplify the logic since service workers are ephemeral
+			// We'll just handle the immediate tab creation without complex state tracking
+			setTimeout(() => {
+				// Recheck tab limits after a short delay to handle race conditions
+				Promise.race([
+					detectTooManyTabsInWindow(options),
+					detectTooManyTabsInTotal(options)
+				]).then(newPlace => {
+					if (newPlace) {
+						handleExceedTabs(tab, options, newPlace);
+						updateBadge(options);
+					}
+				});
+			}, 100);
+		})
+		.catch(err => console.error("Error handling tab creation:", err));
+	});
 };
 
-app.init();
-app.update();
+// Initialize extension
+const init = () => {
+	chrome.storage.sync.set({
+		defaultOptions: {
+			maxTotal: 50,
+			maxWindow: 20,
+			exceedTabNewWindow: false,
+			displayAlert: true,
+			countPinnedTabs: false,
+			displayBadge: false,
+			alertMessage: "You decided not to open more than {maxPlace} tabs in {place}"
+		}
+	});
+
+	// Request notification permission if needed
+	chrome.permissions.contains({
+		permissions: ['notifications']
+	}, (result) => {
+		if (!result) {
+			chrome.permissions.request({
+				permissions: ['notifications']
+			});
+		}
+	});
+
+	console.log("Tab Limiter initialized");
+};
+
+
+// Event listeners for Manifest V3 service worker
+chrome.tabs.onCreated.addListener((tab) => {
+	handleTabCreated(tab);
+});
+
+chrome.tabs.onCreated.addListener(() => {
+	updateBadge();
+});
+
+chrome.tabs.onRemoved.addListener(() => {
+	updateBadge();
+});
+
+chrome.tabs.onUpdated.addListener(() => {
+	updateBadge();
+});
+
+chrome.windows.onFocusChanged.addListener(() => {
+	updateBadge();
+});
+
+// Initialize on service worker startup
+init();
+updateBadge();
 
 function capitalizeFirstLetter(string) {
 	return string[0].toUpperCase() + string.slice(1);
