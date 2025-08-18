@@ -1,31 +1,28 @@
 {
-	"name": "Tab Limiter",
-	"description": "Limit the number of open tabs – in total and per window",
-	"version": "0.3.0",
-	"author": "Matthias Vogt",
-	"homepage_url": "https://github.com/matthias-vogt/tab-limiter",
+    "name": "Tab Limiter",
+    "description": "Limit the number of open tabs – in total and per window",
+    "version": "0.4.0",
+    "author": "Matthias Vogt",
+    "homepage_url": "https://github.com/juni-vogt/tab-limiter",
 
-	"icons": {
-		"48": "icons/48.png",
-		"128": "icons/128.png"
-	},
+    "icons": {
+        "48": "icons/48.png",
+        "128": "icons/128.png"
+    },
 
-	"action": {
-		"default_icon": {
-			"48": "icons/48.png",
-			"128": "icons/128.png"
-		},
-		"default_popup": "options.html",
-		"default_title": "Tab Limiter"
-	},
-	"options_page": "options.html",
-	"background": {
-		"service_worker": "background.js"
-	},
-	"permissions": [
-		"storage",
-		"notifications"
-	],
+    "action": {
+        "default_icon": {
+            "48": "icons/48.png",
+            "128": "icons/128.png"
+        },
+        "default_popup": "options.html",
+        "default_title": "Tab Limiter"
+    },
+    "options_page": "options.html",
+    "background": {
+        "service_worker": "background.js"
+    },
+    "permissions": ["storage", "notifications"],
 
-	"manifest_version": 3
+    "manifest_version": 3
 }
