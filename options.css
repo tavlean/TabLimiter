@@ -141,7 +141,7 @@ body {
 .section h2 {
     font-size: 14px;
     font-weight: 600;
-    margin: 4px 0 8px 0;
+    margin: 4px 0;
     color: var(--text-primary);
 }
 
@@ -177,7 +177,7 @@ body {
     justify-content: space-between;
     width: 100%;
     max-width: 192px;
-    height: 56px;
+    height: 52px;
     border: 1px solid var(--border-color);
     background: var(--bg-tertiary);
     border-radius: 10px;
@@ -222,6 +222,7 @@ body {
     color: var(--text-secondary);
     font-size: 28px;
     font-weight: 600;
+    font-family: var(--font-family);
     letter-spacing: 0.5px;
     -moz-appearance: textfield;
     appearance: textfield;
