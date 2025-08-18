@@ -1,59 +1,184 @@
-<!doctype html>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tab Limiter Settings</title>
+        <meta charset="utf-8" />
+        <link
+            rel="stylesheet"
+            href="options.css"
+        />
+        <script src="options.js"></script>
+    </head>
 
-<head>
-	<title>Tab Limiter's Popup</title>
+    <body>
+        <div class="header">
+            <h1>Tab Limiter</h1>
+            <div class="subtitle">| Options</div>
+        </div>
 
-	<meta charset="utf-8">
-	<link rel="stylesheet" href="options.css">
-	<script src="options.js"></script>
-</head>
+        <div class="section">
+            <h2>Limits</h2>
+            <div class="input-group">
+                <label for="maxTotal">Maximum total tabs</label>
+                <div class="stepper-container">
+                    <button
+                        type="button"
+                        class="stepper-btn"
+                        data-input="maxTotal"
+                        data-action="decrement"
+                    >
+                        -
+                    </button>
+                    <input
+                        id="maxTotal"
+                        type="number"
+                        min="1"
+                        max="1337"
+                        class="stepper-input"
+                        value="50"
+                    />
+                    <button
+                        type="button"
+                        class="stepper-btn"
+                        data-input="maxTotal"
+                        data-action="increment"
+                    >
+                        +
+                    </button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="maxWindow">Maximum tabs per window</label>
+                <div class="stepper-container">
+                    <button
+                        type="button"
+                        class="stepper-btn"
+                        data-input="maxWindow"
+                        data-action="decrement"
+                    >
+                        -
+                    </button>
+                    <input
+                        id="maxWindow"
+                        type="number"
+                        min="1"
+                        max="1337"
+                        class="stepper-input"
+                        value="20"
+                    />
+                    <button
+                        type="button"
+                        class="stepper-btn"
+                        data-input="maxWindow"
+                        data-action="increment"
+                    >
+                        +
+                    </button>
+                </div>
+            </div>
+        </div>
 
-<body>
-	<h1>Options</h1>
-	<div id="options">
-		<input id="maxTotal" type="number" min="1" max="1337">
-		<label for="maxTotal">Max. total tabs</label>
+        <div class="section">
+            <h2>Behavior</h2>
+            <label class="checkbox-group">
+                <input
+                    id="exceedTabNewWindow"
+                    type="checkbox"
+                    class="checkbox-input"
+                />
+                <span class="checkmark"></span>
+                <span class="label-text">Open excess tabs in new window</span>
+            </label>
+            <label class="checkbox-group">
+                <input
+                    id="countPinnedTabs"
+                    type="checkbox"
+                    class="checkbox-input"
+                />
+                <span class="checkmark"></span>
+                <span class="label-text">Count pinned tabs toward limits</span>
+            </label>
+        </div>
 
-		<input id="maxWindow" type="number" min="1" max="1337">
-		<label for="maxWindow">Max. tabs in one window</label>
+        <div class="section">
+            <h2>Display</h2>
+            <label class="checkbox-group">
+                <input
+                    id="displayBadge"
+                    type="checkbox"
+                    class="checkbox-input"
+                />
+                <span class="checkmark"></span>
+                <span class="label-text">Show remaining tabs counter on icon</span>
+            </label>
+        </div>
 
-		<input id="displayBadge" type="checkbox">
-		<label for="displayBadge" id="displayBadgeLabel">Show remaining tabs badge</label>
+        <div class="section">
+            <h2>Alerts</h2>
+            <label class="checkbox-group">
+                <input
+                    id="displayAlert"
+                    type="checkbox"
+                    class="checkbox-input"
+                />
+                <span class="checkmark"></span>
+                <span class="label-text">Show alert when limit is reached</span>
+            </label>
+            <div class="input-group alert-message-group">
+                <label for="alertMessage">Alert message</label>
+                <input
+                    id="alertMessage"
+                    type="text"
+                    class="text-input"
+                    placeholder="Too many tabs open!"
+                />
+            </div>
+        </div>
 
-		<input id="countPinnedTabs" type="checkbox">
-		<label for="countPinnedTabs" id="countPinnedTabsLabel">Count pinned tabs</label>
+        <div class="section">
+            <input
+                id="info"
+                type="checkbox"
+                class="hidden-checkbox"
+            />
+            <label
+                for="info"
+                class="info-toggle"
+                >Message placeholders</label
+            >
+            <div class="info-content">
+                <p>Use placeholders in your alert message:</p>
+                <div class="placeholder-grid">
+                    <div class="placeholder-item">
+                        <code>{place}</code>
+                        <span>Where limit was hit ("window" or "total")</span>
+                    </div>
+                    <div class="placeholder-item">
+                        <code>{maxPlace}</code>
+                        <span>The actual limit value</span>
+                    </div>
+                    <div class="placeholder-item">
+                        <code>{maxTotal}</code>
+                        <span>Your total tab limit setting</span>
+                    </div>
+                    <div class="placeholder-item">
+                        <code>{maxWindow}</code>
+                        <span>Your per-window limit setting</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-		<input id="exceedTabNewWindow" type="checkbox">
-		<label for="exceedTabNewWindow" id="exceedTabNewWindowLabel">When window limit is hit, open tab in new window</label>
-
-		<input class="isDependedOnByNextOption" id="displayAlert" type="checkbox">
-		<label for="displayAlert" id="displayAlertLabel">Display alert box</label>
-
-		<input id="alertMessage" type="text">
-		<label for="alertMessage">Alert box message</label>
-	</div>
-
-
-	<input id="info" type="checkbox">
-	<label for="info">{Placeholders}</label>
-	<div class="container">
-		<p>You can use <code>{<em>name</em>}</code> syntax for placeholders in the alert box message.</p>
-		<dl>
-			<dt>{place}</dt>
-			<dd>"one window" or "total", depending on where there were too many tabs. If both, uses "total".</dd>
-			<dt>{maxPlace}</dt>
-			<dd>maxTotal or maxWindow, depending on where there were too many tabs. If both, uses "total".</dd>
-
-			<dt>{maxTotal}</dt>
-			<dd>Max. number of total tabs</dd>
-			<dt>{maxWindow}</dt>
-			<dd>Max. number of tabs in one window</dd>
-		</dl>
-	</div>
-
-	<p id="status">Change values to update them</p>
-
-	<p class="message hidden">
-		Hello everyone, welcome to version 0.3.0! See the changelog at the <a href="https://github.com/matthias-vogt/tab-limiter/releases" target="_blank">github repo</a>. Thanks for using Tab Limiter! :)
-	</p>
-</body>
+        <div class="footer">
+            <div id="status">Settings auto-save as you change them</div>
+            <div class="version-info">
+                Tab Limiter v0.3.0 •
+                <a
+                    href="https://github.com/matthias-vogt/tab-limiter/releases"
+                    target="_blank"
+                    >View changelog</a
+                >
+            </div>
+        </div>
+    </body>
+</html>

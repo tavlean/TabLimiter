@@ -92,12 +92,10 @@ const restoreOptions = () => {
 document.addEventListener('DOMContentLoaded', () => {
 	restoreOptions();
 
-	$inputs = document.querySelectorAll('#options input');
+	$inputs = document.querySelectorAll('input[type="checkbox"], input[type="number"], input[type="text"]');
 
-	const onChangeInputs =
-		document.querySelectorAll('#options [type="checkbox"], #options [type="number"]');
-	const onKeyupInputs =
-		document.querySelectorAll('#options [type="text"], #options [type="number"]');
+	const onChangeInputs = document.querySelectorAll('input[type="checkbox"], input[type="number"]');
+	const onKeyupInputs = document.querySelectorAll('input[type="text"], input[type="number"]');
 
 	for (let i = 0; i < onChangeInputs.length; i++) {
 		onChangeInputs[i].addEventListener('change', saveOptions);
@@ -106,9 +104,45 @@ document.addEventListener('DOMContentLoaded', () => {
 		onKeyupInputs[i].addEventListener('keyup', saveOptions);
 	}
 
+	// Stepper button functionality
+	const stepperButtons = document.querySelectorAll('.stepper-btn');
+	stepperButtons.forEach(button => {
+		button.addEventListener('click', () => {
+			const inputId = button.dataset.input;
+			const action = button.dataset.action;
+			const input = document.getElementById(inputId);
+			const currentValue = parseInt(input.value) || 1;
+			const min = parseInt(input.min) || 1;
+			const max = parseInt(input.max) || 1337;
+			
+			let newValue;
+			if (action === 'increment') {
+				newValue = Math.min(currentValue + 1, max);
+			} else {
+				newValue = Math.max(currentValue - 1, min);
+			}
+			
+			input.value = newValue;
+			input.dispatchEvent(new Event('change', { bubbles: true }));
+		});
+	});
+
+	// Toggle alert message input based on displayAlert checkbox
+	const displayAlertCheckbox = document.getElementById('displayAlert');
+	const alertMessageGroup = document.querySelector('.alert-message-group');
+	
+	function toggleAlertMessage() {
+		if (displayAlertCheckbox.checked) {
+			alertMessageGroup.classList.remove('disabled');
+		} else {
+			alertMessageGroup.classList.add('disabled');
+		}
+	}
+	
+	displayAlertCheckbox.addEventListener('change', toggleAlertMessage);
+	toggleAlertMessage(); // Initial state
 
 	// show special message
-
 	if (!localStorage.getItem('readMessage') && (new Date() < new Date('09-20-2020'))) {
 		document.querySelector('.message').classList.remove('hidden')
 		setTimeout(() => {
