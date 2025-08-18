@@ -167,7 +167,7 @@ const init = () => {
             displayAlert: true,
             countPinnedTabs: false,
             displayBadge: false,
-            alertMessage: "You decided not to open more than {maxPlace} tabs in {place}",
+            alertMessage: "The limit is {maxPlace} tabs in {place}",
         },
     });
 
