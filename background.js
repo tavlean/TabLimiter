@@ -11,7 +11,13 @@ const totalRemaining = options =>
 	tabQuery(options)
 		.then(tabs => options.maxTotal - tabs.length)
 
-const updateBadge = options => {
+const updateBadge = (options) => {
+	// Handle case when no options are provided
+	if (!options) {
+		getOptions().then(updateBadge);
+		return;
+	}
+	
 	if (!options.displayBadge) {
 		chrome.action.setBadgeText({ text: "" })
 		return;
@@ -191,25 +197,24 @@ chrome.tabs.onCreated.addListener((tab) => {
 	handleTabCreated(tab);
 });
 
-chrome.tabs.onCreated.addListener(() => {
-	updateBadge();
-});
+// Remove duplicate listener for onCreated - handleTabCreated already calls updateBadge
 
 chrome.tabs.onRemoved.addListener(() => {
-	updateBadge();
+	getOptions().then(updateBadge);
 });
 
 chrome.tabs.onUpdated.addListener(() => {
-	updateBadge();
+	getOptions().then(updateBadge);
 });
 
 chrome.windows.onFocusChanged.addListener(() => {
-	updateBadge();
+	getOptions().then(updateBadge);
 });
 
 // Initialize on service worker startup
 init();
-updateBadge();
+// Initialize badge on startup by getting options first
+getOptions().then(updateBadge);
 
 function capitalizeFirstLetter(string) {
 	return string[0].toUpperCase() + string.slice(1);
