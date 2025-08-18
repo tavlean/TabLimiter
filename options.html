@@ -1,22 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <title>Tab Limiter Settings</title>
         <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+        <meta
+            name="color-scheme"
+            content="light dark"
+        />
         <link
             rel="stylesheet"
             href="options.css"
         />
-        <script src="options.js"></script>
+        <script
+            src="options.js"
+            defer
+        ></script>
     </head>
 
     <body>
         <div class="header">
+            <img src="icons/Icon32.png" alt="Tab Limiter" class="header-icon">
             <h1>Tab Limiter</h1>
             <div class="subtitle">| Options</div>
         </div>
 
-        <div class="section">
+        <div class="section stepper-section">
             <div class="input-group">
                 <label for="maxTotal">Maximum total tabs</label>
                 <div class="stepper-container">
@@ -25,8 +37,9 @@
                         class="stepper-btn"
                         data-input="maxTotal"
                         data-action="decrement"
+                        aria-label="Decrease maximum total tabs"
                     >
-                        -
+                        –
                     </button>
                     <input
                         id="maxTotal"
@@ -35,17 +48,21 @@
                         max="1337"
                         class="stepper-input"
                         value="50"
+                        inputmode="numeric"
+                        aria-live="polite"
                     />
                     <button
                         type="button"
                         class="stepper-btn"
                         data-input="maxTotal"
                         data-action="increment"
+                        aria-label="Increase maximum total tabs"
                     >
                         +
                     </button>
                 </div>
             </div>
+
             <div class="input-group">
                 <label for="maxWindow">Maximum tabs per window</label>
                 <div class="stepper-container">
@@ -54,8 +71,9 @@
                         class="stepper-btn"
                         data-input="maxWindow"
                         data-action="decrement"
+                        aria-label="Decrease maximum tabs per window"
                     >
-                        -
+                        –
                     </button>
                     <input
                         id="maxWindow"
@@ -64,12 +82,15 @@
                         max="1337"
                         class="stepper-input"
                         value="20"
+                        inputmode="numeric"
+                        aria-live="polite"
                     />
                     <button
                         type="button"
                         class="stepper-btn"
                         data-input="maxWindow"
                         data-action="increment"
+                        aria-label="Increase maximum tabs per window"
                     >
                         +
                     </button>
@@ -78,50 +99,70 @@
         </div>
 
         <div class="section">
-            <h2>Alerts</h2>
-            <label class="checkbox-group">
-                <input
-                    id="displayAlert"
-                    type="checkbox"
-                    class="checkbox-input"
-                />
-                <span class="checkmark"></span>
-                <span class="label-text">Show alert when limit is reached</span>
-            </label>
-        </div>
-
-        <div class="section">
-            <h2>Display</h2>
-            <label class="checkbox-group">
+            <label class="toggle-row">
                 <input
                     id="displayBadge"
                     type="checkbox"
-                    class="checkbox-input"
+                    class="toggle-input checkbox-input"
                 />
-                <span class="checkmark"></span>
-                <span class="label-text">Show remaining tabs counter on icon</span>
+                <span
+                    class="toggle-slider"
+                    aria-hidden="true"
+                ></span>
+                <div class="toggle-text">
+                    <div class="label-title">Badge</div>
+                    <div class="label-desc">Show remaining tabs on icon</div>
+                </div>
+            </label>
+
+            <label class="toggle-row">
+                <input
+                    id="displayAlert"
+                    type="checkbox"
+                    class="toggle-input checkbox-input"
+                />
+                <span
+                    class="toggle-slider"
+                    aria-hidden="true"
+                ></span>
+                <div class="toggle-text">
+                    <div class="label-title">Alert</div>
+                    <div class="label-desc">Show alert when limit is reached</div>
+                </div>
             </label>
         </div>
 
         <div class="section">
             <h2>Behavior</h2>
-            <label class="checkbox-group">
+
+            <label class="toggle-row">
                 <input
                     id="exceedTabNewWindow"
                     type="checkbox"
-                    class="checkbox-input"
+                    class="toggle-input checkbox-input"
                 />
-                <span class="checkmark"></span>
-                <span class="label-text">Open excess tabs in new window</span>
+                <span
+                    class="toggle-slider"
+                    aria-hidden="true"
+                ></span>
+                <div class="toggle-text">
+                    <div class="label-solo">Open extra tabs in new window</div>
+                </div>
             </label>
-            <label class="checkbox-group">
+
+            <label class="toggle-row">
                 <input
                     id="countPinnedTabs"
                     type="checkbox"
-                    class="checkbox-input"
+                    class="toggle-input checkbox-input"
                 />
-                <span class="checkmark"></span>
-                <span class="label-text">Count pinned tabs toward limits</span>
+                <span
+                    class="toggle-slider"
+                    aria-hidden="true"
+                ></span>
+                <div class="toggle-text">
+                    <div class="label-solo">Count pinned tabs towards limits</div>
+                </div>
             </label>
         </div>
 
