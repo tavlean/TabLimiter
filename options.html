@@ -123,61 +123,10 @@
                 <span class="checkmark"></span>
                 <span class="label-text">Show alert when limit is reached</span>
             </label>
-            <div class="input-group alert-message-group">
-                <label for="alertMessage">Alert message</label>
-                <input
-                    id="alertMessage"
-                    type="text"
-                    class="text-input"
-                    placeholder="Too many tabs open!"
-                />
-            </div>
-        </div>
-
-        <div class="section">
-            <input
-                id="info"
-                type="checkbox"
-                class="hidden-checkbox"
-            />
-            <label
-                for="info"
-                class="info-toggle"
-                >Message placeholders</label
-            >
-            <div class="info-content">
-                <p>Use placeholders in your alert message:</p>
-                <div class="placeholder-grid">
-                    <div class="placeholder-item">
-                        <code>{place}</code>
-                        <span>Where limit was hit ("window" or "total")</span>
-                    </div>
-                    <div class="placeholder-item">
-                        <code>{maxPlace}</code>
-                        <span>The actual limit value</span>
-                    </div>
-                    <div class="placeholder-item">
-                        <code>{maxTotal}</code>
-                        <span>Your total tab limit setting</span>
-                    </div>
-                    <div class="placeholder-item">
-                        <code>{maxWindow}</code>
-                        <span>Your per-window limit setting</span>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="footer">
             <div id="status">Settings auto-save as you change them</div>
-            <div class="version-info">
-                Tab Limiter v0.3.0 •
-                <a
-                    href="https://github.com/matthias-vogt/tab-limiter/releases"
-                    target="_blank"
-                    >View changelog</a
-                >
-            </div>
         </div>
     </body>
 </html>

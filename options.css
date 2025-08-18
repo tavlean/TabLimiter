@@ -216,76 +216,9 @@ body {
     color: var(--text-primary);
 }
 
-.alert-message-group {
-    margin-top: 8px;
-    transition: opacity 0.2s;
-}
-
-.alert-message-group.disabled {
-    opacity: 0.5;
-    pointer-events: none;
-}
 
 .hidden-checkbox {
     display: none;
-}
-
-.info-toggle {
-    display: inline-block;
-    font-size: 12px;
-    color: var(--primary-color);
-    cursor: pointer;
-    text-decoration: underline;
-    margin-bottom: 6px;
-}
-
-.info-toggle:hover {
-    color: var(--primary-hover);
-}
-
-.info-content {
-    display: none;
-    background: var(--section-background);
-    padding: 8px;
-    border-radius: var(--border-radius-sm);
-    margin-top: 6px;
-    font-size: 12px;
-}
-
-.info-content p {
-    margin: 0 0 6px 0;
-    color: var(--text-secondary);
-}
-
-.hidden-checkbox:checked ~ .info-content {
-    display: block;
-}
-
-.placeholder-grid {
-    display: grid;
-    gap: 6px;
-}
-
-.placeholder-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.placeholder-item code {
-    background: var(--background);
-    padding: 1px 4px;
-    border-radius: 2px;
-    font-size: 11px;
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New",
-        monospace;
-}
-
-.placeholder-item span {
-    font-size: 11px;
-    color: var(--text-secondary);
 }
 
 .footer {
@@ -305,20 +238,6 @@ body {
 #status.notice {
     color: var(--success-color);
     font-weight: 500;
-}
-
-.version-info {
-    font-size: 10px;
-    color: var(--text-secondary);
-}
-
-.version-info a {
-    color: var(--primary-color);
-    text-decoration: none;
-}
-
-.version-info a:hover {
-    text-decoration: underline;
 }
 
 /* Smooth transitions */

@@ -82,10 +82,10 @@ const restoreOptions = () => {
 document.addEventListener('DOMContentLoaded', () => {
 	restoreOptions();
 
-	$inputs = document.querySelectorAll('input[type="checkbox"], input[type="number"], input[type="text"]');
+	$inputs = document.querySelectorAll('input[type="checkbox"], input[type="number"]');
 
 	const onChangeInputs = document.querySelectorAll('input[type="checkbox"], input[type="number"]');
-	const onKeyupInputs = document.querySelectorAll('input[type="text"], input[type="number"]');
+	const onKeyupInputs = document.querySelectorAll('input[type="number"]');
 
 	for (let i = 0; i < onChangeInputs.length; i++) {
 		onChangeInputs[i].addEventListener('change', saveOptions);
@@ -117,20 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
-	// Toggle alert message input based on displayAlert checkbox
-	const displayAlertCheckbox = document.getElementById('displayAlert');
-	const alertMessageGroup = document.querySelector('.alert-message-group');
-	
-	function toggleAlertMessage() {
-		if (displayAlertCheckbox.checked) {
-			alertMessageGroup.classList.remove('disabled');
-		} else {
-			alertMessageGroup.classList.add('disabled');
-		}
-	}
-	
-	displayAlertCheckbox.addEventListener('change', toggleAlertMessage);
-	toggleAlertMessage(); // Initial state
 
 	// show special message
 	if (!localStorage.getItem('readMessage') && (new Date() < new Date('09-20-2020'))) {

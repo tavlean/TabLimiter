@@ -33,23 +33,6 @@ const updateBadge = (options) => {
 
 // ----------------------------------------------------------------------------
 
-// const annotateOptionsWithTabInfo = options => new Promise((res, rej) => {
-
-// 	const allWindowsTabsLength = queryFactory({
-// 		pinned: options.countPinnedTabs
-// 	})
-
-// 	const currentWindowTabsLength = queryFactory({
-// 		currentWindow: true,
-// 		pinned: options.countPinnedTabs
-// 	})
-
-// 	res(Object.assign(options, {
-// 		allWindowsTabsLength: allWindowsTabsLength,
-// 		currentWindowTabsLength: currentWindowTabsLength,
-// 	}))
-// })
-
 // only resolves if there are too many tabs
 const detectTooManyTabsInWindow = (options) =>
     new Promise((res) => {
