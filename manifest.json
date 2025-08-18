@@ -1,19 +1,23 @@
 {
     "name": "Tab Limiter",
     "description": "Limit the number of open tabs – in total and per window",
-    "version": "0.4.0",
-    "author": "Matthias Vogt",
-    "homepage_url": "https://github.com/juni-vogt/tab-limiter",
+    "version": "1.0.0",
+    "author": "Tavlean, Matthias Vogt",
+    "homepage_url": "https://github.com/tavlean/TabLimiter",
 
     "icons": {
-        "48": "icons/48.png",
-        "128": "icons/128.png"
+        "16": "icons/Icon16.png",
+        "32": "icons/Icon32.png",
+        "48": "icons/Icon48.png",
+        "128": "icons/Icon128.png"
     },
 
     "action": {
         "default_icon": {
-            "48": "icons/48.png",
-            "128": "icons/128.png"
+            "16": "icons/Icon16.png",
+            "32": "icons/Icon32.png",
+            "48": "icons/Icon48.png",
+            "128": "icons/Icon128.png"
         },
         "default_popup": "options.html",
         "default_title": "Tab Limiter"

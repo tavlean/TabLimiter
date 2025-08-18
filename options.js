@@ -13,20 +13,10 @@ const totalRemaining = options =>
 	tabQuery(options)
 		.then(tabs => options.maxTotal - tabs.length)
 
+// Badge updates are handled by the background script
 const updateBadge = options => {
-	if (!options.displayBadge) {
-		browser.browserAction.setBadgeText({ text: "" })
-		return;
-	}
-
-	Promise.all([windowRemaining(options), totalRemaining(options)])
-	.then(remaining => {
-		// console.log(remaining)
-		// remaining = [remainingInWindow, remainingInTotal]
-		browser.browserAction.setBadgeText({
-			text: Math.min(...remaining).toString()
-		})
-	})
+	// Send message to background script to update badge
+	browser.runtime.sendMessage({ action: 'updateBadge', options });
 }
 
 // ----------------------------------------------------------------------------
