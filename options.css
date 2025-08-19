@@ -11,7 +11,7 @@
     --gray-900: #111827;
     --gray-950: #030712;
 
-    --primary-color: hsl(221, 97%, 54%);
+    --primary-color: hsl(216, 100%, 58%);
     --primary-hover: #1557b0;
 
     --text-primary: var(--gray-900);
@@ -42,12 +42,11 @@
 /* DARK MODE */
 @media (prefers-color-scheme: dark) {
     :root {
-        --primary-color: hsl(221, 80%, 54%);
-
         --text-primary: #fff;
         --text-secondary: var(--gray-100);
         --text-tertiary: var(--gray-200);
         --text-quaternary: var(--gray-300);
+        --text-quinary: var(--gray-400);
 
         --bg-primary: var(--gray-900);
         --bg-secondary: var(--gray-800);
@@ -79,7 +78,7 @@ body {
     font-size: var(--font-size);
     line-height: var(--line-height);
     margin: 0;
-    padding: 16px 18px;
+    padding: 16px 22px;
     background: var(--bg-body);
     color: var(--text-primary);
     min-width: 320px;
@@ -93,8 +92,8 @@ body {
     justify-content: center;
     gap: 6px;
     margin-bottom: 12px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+    border-bottom: 1.5px solid var(--border-color);
 }
 
 .header-icon {
@@ -246,8 +245,8 @@ body {
 
 .toggle-slider {
     position: relative;
-    width: 40px;
-    height: 24px;
+    width: 36px;
+    height: 20px;
     background: var(--bg-quaternary);
     border: 1px solid var(--border-color);
     border-radius: 999px;
@@ -259,9 +258,9 @@ body {
     content: "";
     position: absolute;
     top: 50%;
-    left: 3px;
-    width: 18px;
-    height: 18px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
     transform: translateY(-50%);
     background: #fff;
     border-radius: 50%;
@@ -291,7 +290,7 @@ body {
 }
 
 .toggle-input:checked + .toggle-slider::after {
-    left: calc(100% - 3px - 18px);
+    left: calc(100% - 2px - 16px);
 }
 
 .toggle-input:focus-visible + .toggle-slider {
@@ -314,12 +313,16 @@ body {
 
 .label-desc {
     font-size: 13px;
-    color: var(--text-tertiary);
+    color: var(--text-quaternary);
 }
 
 .label-solo {
     font-size: 13px;
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
+}
+
+.last-section {
+    padding-bottom: 16px;
 }
 
 /* Footer */
@@ -332,8 +335,7 @@ body {
 
 #status {
     font-size: 11px;
-    color: var(--text-quaternary);
-    margin-bottom: 6px;
+    color: var(--text-quinary);
     animation: fadeIn 0.2s ease;
     transition: color 0.2s, opacity 0.2s;
 }
