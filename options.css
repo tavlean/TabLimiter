@@ -11,18 +11,6 @@
     --gray-900: #111827;
     --gray-950: #030712;
 
-    --zinc-50: #fafafa;
-    --zinc-100: #f4f4f5;
-    --zinc-200: #e4e4e7;
-    --zinc-300: #d4d4d8;
-    --zinc-400: #a1a1aa;
-    --zinc-500: #71717a;
-    --zinc-600: #52525b;
-    --zinc-700: #3f3f46;
-    --zinc-800: #27272a;
-    --zinc-900: #18181b;
-    --zinc-950: #09090b;
-
     --primary-color: hsl(221, 97%, 54%);
     --primary-hover: #1557b0;
 
@@ -32,12 +20,12 @@
     --text-quaternary: var(--gray-500);
 
     --bg-primary: #fff;
-    --bg-secondary: var(--zinc-100);
-    --bg-tertiary: var(--zinc-200);
-    --bg-quaternary: var(--zinc-300);
+    --bg-secondary: var(--gray-100);
+    --bg-tertiary: var(--gray-200);
+    --bg-quaternary: var(--gray-300);
     --bg-body: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
 
-    --border-color: var(--zinc-200);
+    --border-color: var(--gray-200);
 
     --success-color: #047857;
 
@@ -61,13 +49,13 @@
         --text-tertiary: var(--gray-200);
         --text-quaternary: var(--gray-300);
 
-        --bg-primary: var(--zinc-900);
-        --bg-secondary: var(--zinc-800);
-        --bg-tertiary: var(--zinc-700);
-        --bg-quaternary: var(--zinc-600);
+        --bg-primary: var(--gray-900);
+        --bg-secondary: var(--gray-800);
+        --bg-tertiary: var(--gray-700);
+        --bg-quaternary: var(--gray-600);
         --bg-body: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
 
-        --border-color: var(--zinc-700);
+        --border-color: var(--gray-700);
 
         --success-color: #10b981;
 
@@ -179,7 +167,7 @@ body {
     max-width: 192px;
     height: 52px;
     border: 1px solid var(--border-color);
-    background: var(--bg-tertiary);
+    background: var(--bg-secondary);
     border-radius: 10px;
     overflow: hidden;
 }
@@ -286,7 +274,7 @@ body {
     }
 
     .stepper-btn:hover {
-        background: var(--bg-secondary);
+        background: var(--bg-tertiary);
         color: var(--text-primary);
     }
 }
