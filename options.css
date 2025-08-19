@@ -25,7 +25,7 @@
     --bg-quaternary: var(--gray-300);
     --bg-body: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
 
-    --border-color: var(--gray-200);
+    --border-color: var(--gray-300);
 
     --success-color: #047857;
 
@@ -39,7 +39,7 @@
     --line-height: 1.45;
 }
 
-/* Dark mode via user preference */
+/* DARK MODE */
 @media (prefers-color-scheme: dark) {
     :root {
         --primary-color: hsl(221, 80%, 54%);
@@ -53,7 +53,7 @@
         --bg-secondary: var(--gray-800);
         --bg-tertiary: var(--gray-700);
         --bg-quaternary: var(--gray-600);
-        --bg-body: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+        --bg-body: linear-gradient(135deg, var(--bg-tertiary), var(--bg-primary));
 
         --border-color: var(--gray-700);
 
@@ -170,6 +170,7 @@ body {
     background: var(--bg-secondary);
     border-radius: 10px;
     overflow: hidden;
+    box-shadow: inset 3px 3px 4px 0 rgba(255, 255, 255, 0.25);
 }
 
 .stepper-btn {
@@ -269,6 +270,10 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
+    .stepper-container {
+        box-shadow: inset 3px 3px 4px 0 rgba(0, 0, 0, 0.25);
+    }
+
     .toggle-slider::after {
         background: #e9ecf1;
     }
@@ -276,6 +281,7 @@ body {
     .stepper-btn:hover {
         background: var(--bg-tertiary);
         color: var(--text-primary);
+        box-shadow: 3px 0 4px 0 rgba(0, 0, 0, 0.25);
     }
 }
 
