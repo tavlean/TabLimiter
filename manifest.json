@@ -1,8 +1,8 @@
 {
     "name": "Tab Limiter",
     "description": "Limit the number of open tabs – Total and per window",
-    "version": "1.1.0",
-    "author": "Tavlean, Matthias Vogt",
+    "version": "1.0.0",
+    "author": "Tavlean",
     "homepage_url": "https://github.com/tavlean/TabLimiter",
 
     "icons": {

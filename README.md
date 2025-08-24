@@ -10,3 +10,7 @@ Firefox Version - Coming Soon
 -   Limit the number of open tabs in total
 -   Limit the number of open tabs per window
 -   Notify when the limit is reached
+
+## Credits
+
+Originally created by Matthias Vogt (2016). Modernized, redesigned, and maintained by me now.
