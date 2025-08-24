@@ -3,7 +3,7 @@
 Chrome extension to limit the number of open tabs – Total and per window.
 Firefox Version - Coming Soon
 
-<img width="1280" height="800" alt="screenshot" src="https://github.com/user-attachments/assets/16b3e2e8-ed33-4d10-b996-88c2cf8da825" />
+<img width="1280" height="800" alt="screenshot" src="https://github.com/user-attachments/assets/9267dd6b-645c-4249-aa68-79add21c8764" />
 
 ## Features
 
