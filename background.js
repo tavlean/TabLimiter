@@ -70,17 +70,15 @@ const displayAlert = (options, place) =>
             return res(false);
         }
 
-        const replacer = (match, p1) => {
+        const replacer = (_, p1) => {
             switch (p1) {
                 case "place":
                 case "which": // backwards compatibility
                     return place === "window" ? "one window" : "total";
-                    break;
 
                 case "maxPlace":
                 case "maxWhich": // backwards compatibility
                     return options["max" + capitalizeFirstLetter(place)];
-                    break;
 
                 default:
                     return options[p1] || "?";
@@ -105,10 +103,61 @@ const displayAlert = (options, place) =>
 const getTabCount = () => new Promise((res) => chrome.tabs.query({}, (tabs) => res(tabs.length)));
 
 // Handle tab creation with Manifest V3 service worker
-const handleExceedTabs = (tab, options, place) => {
+const handleExceedTabs = async (tab, options, place) => {
     console.log(place);
+    
+    // CRITICAL: Always check total tab limit first
+    const totalTabs = await tabQuery(options);
+    if (totalTabs.length >= options.maxTotal) {
+        // Total limit would be exceeded, close the tab immediately
+        chrome.tabs.remove(tab.id);
+        return;
+    }
+    
     if (options.exceedTabNewWindow && place === "window") {
-        chrome.windows.create({ tabId: tab.id, focused: true });
+        try {
+            // Find all windows and their tab counts
+            const windows = await new Promise(resolve => 
+                chrome.windows.getAll({ populate: true }, resolve)
+            );
+            
+            let bestWindow = null;
+            let maxRemainingCapacity = 0;
+            
+            // Find existing window with most available capacity
+            for (const window of windows) {
+                const windowTabs = window.tabs.filter(tab => 
+                    options.countPinnedTabs ? true : !tab.pinned
+                );
+                const remainingCapacity = options.maxWindow - windowTabs.length;
+                
+                if (remainingCapacity > maxRemainingCapacity) {
+                    maxRemainingCapacity = remainingCapacity;
+                    bestWindow = window;
+                }
+            }
+            
+            // Double-check total limit before proceeding
+            const currentTotalTabs = await tabQuery(options);
+            if (currentTotalTabs.length >= options.maxTotal) {
+                chrome.tabs.remove(tab.id);
+                return;
+            }
+            
+            if (bestWindow && maxRemainingCapacity > 0) {
+                // Move tab to the best existing window
+                await chrome.tabs.move(tab.id, { windowId: bestWindow.id, index: -1 });
+                // Ensure the window is focused
+                await chrome.windows.update(bestWindow.id, { focused: true });
+            } else {
+                // All windows are at capacity, create new one
+                chrome.windows.create({ tabId: tab.id, focused: true });
+            }
+        } catch (error) {
+            console.error("Error in handleExceedTabs:", error);
+            // Fallback to original behavior on error
+            chrome.tabs.remove(tab.id);
+        }
     } else {
         chrome.tabs.remove(tab.id);
     }
