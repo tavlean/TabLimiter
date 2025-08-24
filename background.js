@@ -64,7 +64,7 @@ const getOptions = () =>
         });
     });
 
-const displayAlert = (options, place) =>
+const displayAlert = (options, place, movedToOtherWindow = false) =>
     new Promise((res) => {
         if (!options.displayAlert) {
             return res(false);
@@ -85,7 +85,12 @@ const displayAlert = (options, place) =>
             }
         };
 
-        const renderedMessage = options.alertMessage.replace(/{\s*(\S+)\s*}/g, replacer);
+        let renderedMessage = options.alertMessage.replace(/{\s*(\S+)\s*}/g, replacer);
+        
+        // Append "Opened in other window" when tab is moved due to exceedTabNewWindow
+        if (movedToOtherWindow && options.exceedTabNewWindow && place === "window") {
+            renderedMessage += " - Opened in other window";
+        }
 
         // Use notifications instead of alert() for Manifest V3
         chrome.notifications.create({
@@ -144,31 +149,40 @@ const handleExceedTabs = async (tab, options, place) => {
                 return;
             }
             
+            let movedToOtherWindow = false;
+            
             if (bestWindow && maxRemainingCapacity > 0) {
                 // Move tab to the best existing window
                 await chrome.tabs.move(tab.id, { windowId: bestWindow.id, index: -1 });
                 // Ensure the window is focused
                 await chrome.windows.update(bestWindow.id, { focused: true });
+                movedToOtherWindow = true;
             } else {
                 // All windows are at capacity, create new one
                 chrome.windows.create({ tabId: tab.id, focused: true });
+                movedToOtherWindow = true;
             }
+            
+            // Show alert with "Opened in other window" message
+            displayAlert(options, place, movedToOtherWindow);
+            
         } catch (error) {
             console.error("Error in handleExceedTabs:", error);
             // Fallback to original behavior on error
             chrome.tabs.remove(tab.id);
+            displayAlert(options, place, false);
         }
     } else {
         chrome.tabs.remove(tab.id);
+        displayAlert(options, place, false);
     }
 };
 
 const handleTabCreated = async (tab) => {
     return getOptions().then((options) => {
         return Promise.race([detectTooManyTabsInWindow(options), detectTooManyTabsInTotal(options)])
-            .then((place) => {
+            .then(() => {
                 console.log("Tab creation detected, checking limits...");
-                displayAlert(options, place); // alert about opening too many tabs
 
                 // For Manifest V3, we simplify the logic since service workers are ephemeral
                 // We'll just handle the immediate tab creation without complex state tracking
