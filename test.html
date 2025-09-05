@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Test Options Page</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="stylesheet" href="extension/options.css" />
+    <style>
+        /* Mock browser API for testing */
+        window.browser = {
+            storage: {
+                sync: {
+                    get: function(keys, callback) {
+                        const defaults = {
+                            defaultOptions: {
+                                maxWindow: 20,
+                                maxTotal: 50,
+                                displayBadge: true,
+                                displayAlert: true,
+                                exceedTabNewWindow: false,
+                                countPinnedTabs: false
+                            }
+                        };
+                        if (typeof keys === 'string') {
+                            callback(defaults);
+                        } else {
+                            callback(defaults.defaultOptions);
+                        }
+                    },
+                    set: function(data, callback) {
+                        console.log('Storage set:', data);
+                        if (callback) callback();
+                    }
+                }
+            },
+            tabs: {
+                query: function(params, callback) {
+                    callback([
+                        { id: 1, windowId: 1, pinned: false },
+                        { id: 2, windowId: 1, pinned: false }
+                    ]);
+                }
+            },
+            windows: {
+                getAll: function(params, callback) {
+                    callback([
+                        { id: 1 },
+                        { id: 2 }
+                    ]);
+                }
+            },
+            runtime: {
+                sendMessage: function(message) {
+                    console.log('Message sent:', message);
+                }
+            }
+        };
+        window.chrome = window.browser;
+    </style>
+</head>
+<body>
+    <iframe src="extension/options.html" width="100%" height="600" style="border: 1px solid #ccc;"></iframe>
+    <div style="margin-top: 20px; padding: 10px; background: #f0f0f0;">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Click the settings gear icon in the top-right corner</li>
+            <li>Settings should slide in and icon should change to X</li>
+            <li>Click the X to return to main view</li>
+            <li>Tab counters should continue updating in both views</li>
+            <li>Settings should be preserved when switching views</li>
+        </ol>
+    </div>
+</body>
+</html>

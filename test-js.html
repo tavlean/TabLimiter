@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Test JavaScript Logic</title>
+    <meta charset="utf-8" />
+    <script>
+        // Mock browser API
+        window.browser = {
+            storage: {
+                sync: {
+                    get: function(keys, callback) {
+                        const defaults = {
+                            defaultOptions: {
+                                maxWindow: 20,
+                                maxTotal: 50,
+                                displayBadge: true,
+                                displayAlert: true,
+                                exceedTabNewWindow: false,
+                                countPinnedTabs: false
+                            }
+                        };
+                        if (typeof keys === 'string') {
+                            callback(defaults);
+                        } else {
+                            callback(defaults.defaultOptions);
+                        }
+                    },
+                    set: function(data, callback) {
+                        console.log('Storage set:', data);
+                        if (callback) callback();
+                    }
+                }
+            },
+            tabs: {
+                query: function(params, callback) {
+                    callback([
+                        { id: 1, windowId: 1, pinned: false },
+                        { id: 2, windowId: 1, pinned: false }
+                    ]);
+                }
+            },
+            windows: {
+                getAll: function(params, callback) {
+                    callback([
+                        { id: 1 },
+                        { id: 2 }
+                    ]);
+                }
+            },
+            runtime: {
+                sendMessage: function(message) {
+                    console.log('Message sent:', message);
+                }
+            }
+        };
+        window.chrome = window.browser;
+
+        // Test the toggle function logic
+        let currentView = 'main';
+
+        function toggleView() {
+            const settingsToggle = document.getElementById('settingsToggle');
+            const settingsIcon = settingsToggle ? settingsToggle.querySelector('.settings-icon') : null;
+            
+            if (currentView === 'main') {
+                console.log('Switching to settings view');
+                currentView = 'settings';
+                if (settingsToggle) {
+                    settingsToggle.setAttribute('aria-expanded', 'true');
+                    settingsToggle.setAttribute('aria-label', 'Close settings');
+                }
+                if (settingsIcon) {
+                    settingsIcon.innerHTML = `
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    `;
+                }
+            } else {
+                console.log('Switching to main view');
+                currentView = 'main';
+                if (settingsToggle) {
+                    settingsToggle.setAttribute('aria-expanded', 'false');
+                    settingsToggle.setAttribute('aria-label', 'Toggle settings');
+                }
+                if (settingsIcon) {
+                    settingsIcon.innerHTML = `
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m15.5-4.5L19 7l-1.5 1.5m-3 3L13 13l-1.5 1.5M6 7L4.5 5.5 6 4m3 3L10.5 8.5 12 10"/>
+                    `;
+                }
+            }
+            
+            // Save current view to storage
+            browser.storage.sync.set({ optionsView: currentView });
+            console.log('View saved:', currentView);
+        }
+
+        // Test the load preference function
+        function loadViewPreference() {
+            browser.storage.sync.get(['optionsView'], (result) => {
+                console.log('Loaded view preference:', result.optionsView);
+                if (result.optionsView === 'settings') {
+                    toggleView();
+                }
+            });
+        }
+
+        function runTests() {
+            console.log('=== Running JavaScript Logic Tests ===');
+            
+            // Test 1: Initial state
+            console.log('Test 1: Initial state - currentView should be "main":', currentView === 'main');
+            
+            // Test 2: Toggle to settings
+            toggleView();
+            console.log('Test 2: After first toggle - currentView should be "settings":', currentView === 'settings');
+            
+            // Test 3: Toggle back to main
+            toggleView();
+            console.log('Test 3: After second toggle - currentView should be "main":', currentView === 'main');
+            
+            // Test 4: Load preference (simulate)
+            console.log('Test 4: Loading view preference...');
+            loadViewPreference();
+            
+            console.log('=== Tests Complete ===');
+        }
+    </script>
+</head>
+<body>
+    <h1>JavaScript Logic Test</h1>
+    <p>This tests the core toggle functionality without the DOM.</p>
+    
+    <button onclick="runTests()">Run Tests</button>
+    
+    <div id="settingsToggle" style="display: none;">
+        <svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m15.5-4.5L19 7l-1.5 1.5m-3 3L13 13l-1.5 1.5M6 7L4.5 5.5 6 4m3 3L10.5 8.5 12 10"/>
+        </svg>
+    </div>
+</body>
+</html>

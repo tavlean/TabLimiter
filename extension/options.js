@@ -29,6 +29,7 @@ const updateBadge = (options) => {
 // ---------------------------------------------------------------------------
 
 let $inputs;
+let currentView = 'main'; // 'main' or 'settings'
 
 // Update tab count displays
 const updateTabCounts = async () => {
@@ -101,6 +102,58 @@ const updateTabCounts = async () => {
     }
 };
 
+// Toggle between main view and settings view
+const toggleView = () => {
+    const mainView = document.getElementById('mainView');
+    const settingsView = document.getElementById('settingsView');
+    const settingsToggle = document.getElementById('settingsToggle');
+    const settingsIcon = settingsToggle.querySelector('.settings-icon');
+    
+    if (currentView === 'main') {
+        // Switch to settings view
+        mainView.classList.add('hidden');
+        settingsView.classList.remove('hidden');
+        settingsToggle.setAttribute('aria-expanded', 'true');
+        settingsToggle.setAttribute('aria-label', 'Close settings');
+        
+        // Change icon to X/close
+        settingsIcon.innerHTML = `
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        `;
+        settingsIcon.setAttribute('viewBox', '0 0 24 24');
+        
+        currentView = 'settings';
+    } else {
+        // Switch to main view
+        settingsView.classList.add('hidden');
+        mainView.classList.remove('hidden');
+        settingsToggle.setAttribute('aria-expanded', 'false');
+        settingsToggle.setAttribute('aria-label', 'Toggle settings');
+        
+        // Change icon back to settings gear
+        settingsIcon.innerHTML = `
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m15.5-4.5L19 7l-1.5 1.5m-3 3L13 13l-1.5 1.5M6 7L4.5 5.5 6 4m3 3L10.5 8.5 12 10"/>
+        `;
+        settingsIcon.setAttribute('viewBox', '0 0 24 24');
+        
+        currentView = 'main';
+    }
+    
+    // Save current view to storage
+    browserRef.storage.sync.set({ optionsView: currentView });
+};
+
+// Load saved view preference
+const loadViewPreference = () => {
+    browserRef.storage.sync.get(['optionsView'], (result) => {
+        if (result.optionsView === 'settings') {
+            toggleView();
+        }
+    });
+};
+
 // Collect and save options to storage
 const saveOptions = () => {
     // Collect all checkbox and number inputs
@@ -156,6 +209,13 @@ document.addEventListener("DOMContentLoaded", () => {
     $inputs = document.querySelectorAll('input[type="checkbox"], input[type="number"]');
     restoreOptions();
     updateTabCounts(); // Update tab counts on page load
+    loadViewPreference(); // Load saved view preference
+
+    // Settings toggle functionality
+    const settingsToggle = document.getElementById('settingsToggle');
+    if (settingsToggle) {
+        settingsToggle.addEventListener('click', toggleView);
+    }
 
     // Wire up change/keyup events for auto-save
     const onChangeInputs = document.querySelectorAll(

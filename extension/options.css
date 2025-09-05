@@ -1,4 +1,5 @@
 :root {
+    /* Full gray color scale */
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
@@ -11,25 +12,27 @@
     --gray-900: #111827;
     --gray-950: #030712;
 
+    /* Contextual color variables - Dark mode defaults */
+    --text-primary: #fff;
+    --text-secondary: var(--gray-100);
+    --text-tertiary: var(--gray-200);
+    --text-quaternary: var(--gray-300);
+    --text-quinary: var(--gray-400);
+
+    --bg-primary: var(--gray-900);
+    --bg-secondary: var(--gray-800);
+    --bg-tertiary: var(--gray-700);
+    --bg-quaternary: var(--gray-600);
+    --bg-body: linear-gradient(135deg, var(--bg-tertiary), var(--bg-primary));
+
+    --border-color: var(--gray-700);
+
+    --success-color: #10b981;
+
+    --focus-ring: rgba(138, 180, 248, 0.3);
+
     --primary-color: hsl(216, 100%, 58%);
     --primary-hover: #1557b0;
-
-    --text-primary: var(--gray-900);
-    --text-secondary: var(--gray-800);
-    --text-tertiary: var(--gray-600);
-    --text-quaternary: var(--gray-500);
-
-    --bg-primary: #fff;
-    --bg-secondary: var(--gray-100);
-    --bg-tertiary: var(--gray-200);
-    --bg-quaternary: var(--gray-300);
-    --bg-body: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
-
-    --border-color: var(--gray-300);
-
-    --success-color: #047857;
-
-    --focus-ring: rgba(26, 115, 232, 0.25);
 
     --border-radius: 12px;
     --border-radius-sm: 8px;
@@ -37,29 +40,6 @@
     --font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-size: 13px;
     --line-height: 1.45;
-}
-
-/* DARK MODE */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --text-primary: #fff;
-        --text-secondary: var(--gray-100);
-        --text-tertiary: var(--gray-200);
-        --text-quaternary: var(--gray-300);
-        --text-quinary: var(--gray-400);
-
-        --bg-primary: var(--gray-900);
-        --bg-secondary: var(--gray-800);
-        --bg-tertiary: var(--gray-700);
-        --bg-quaternary: var(--gray-600);
-        --bg-body: linear-gradient(135deg, var(--bg-tertiary), var(--bg-primary));
-
-        --border-color: var(--gray-700);
-
-        --success-color: #10b981;
-
-        --focus-ring: rgba(138, 180, 248, 0.3);
-    }
 }
 
 /* Global reset */
@@ -89,11 +69,17 @@ body {
 .header {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: 6px;
     margin-bottom: 12px;
     padding-bottom: 12px;
     border-bottom: 1.5px solid var(--border-color);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .header-icon {
@@ -383,20 +369,19 @@ body {
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-    .stepper-container {
-        box-shadow: inset 3px 3px 4px 0 rgba(0, 0, 0, 0.25);
-    }
+/* Dark mode specific styles (now default) */
+.stepper-container {
+    box-shadow: inset 3px 3px 4px 0 rgba(0, 0, 0, 0.25);
+}
 
-    .toggle-slider::after {
-        background: #e9ecf1;
-    }
+.toggle-slider::after {
+    background: #e9ecf1;
+}
 
-    .stepper-btn:hover {
-        background: var(--bg-tertiary);
-        color: var(--text-primary);
-        box-shadow: 3px 0 4px 0 rgba(0, 0, 0, 0.25);
-    }
+.stepper-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    box-shadow: 3px 0 4px 0 rgba(0, 0, 0, 0.25);
 }
 
 .toggle-input:checked + .toggle-slider {
@@ -467,6 +452,54 @@ body {
 /* Utility */
 .hidden {
     display: none !important;
+}
+
+/* Settings Button */
+.settings-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+    color: var(--text-quaternary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-btn:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.settings-btn:active {
+    transform: translateY(0.5px);
+}
+
+.settings-btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.settings-icon {
+    width: 18px;
+    height: 18px;
+}
+
+/* View containers */
+.view-container {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.view-container.hidden {
+    display: none !important;
+}
+
+/* Smooth transitions for view switching */
+#mainView,
+#settingsView {
+    animation: fadeIn 0.3s ease;
 }
 
 /* Animation */

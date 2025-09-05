@@ -23,16 +23,31 @@
 
     <body>
         <div class="header">
-            <img
-                src="icons/Icon32.png"
-                alt="Tab Limiter"
-                class="header-icon"
-            />
-            <h1>Tab Limiter</h1>
-            <div class="subtitle">| Options</div>
+            <div class="header-left">
+                <img
+                    src="icons/Icon32.png"
+                    alt="Tab Limiter"
+                    class="header-icon"
+                />
+                <h1>Tab Limiter</h1>
+                <div class="subtitle">| Options</div>
+            </div>
+            <button
+                type="button"
+                id="settingsToggle"
+                class="settings-btn"
+                aria-label="Toggle settings"
+                aria-expanded="false"
+            >
+                <svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m15.5-4.5L19 7l-1.5 1.5m-3 3L13 13l-1.5 1.5M6 7L4.5 5.5 6 4m3 3L10.5 8.5 12 10"/>
+                </svg>
+            </button>
         </div>
 
-        <div class="cards-container">
+        <div id="mainView" class="view-container">
+            <div class="cards-container">
             <!-- Window Card -->
             <div class="card">
                 <div class="card-header">
@@ -150,9 +165,11 @@
                 </div>
             </div>
         </div>
+        </div>
 
-        <div class="section">
-            <label class="toggle-row">
+        <div id="settingsView" class="view-container hidden">
+            <div class="section">
+                <label class="toggle-row">
                 <input
                     id="displayBadge"
                     type="checkbox"
@@ -217,6 +234,7 @@
                     <div class="label-solo">Count pinned tabs towards limits</div>
                 </div>
             </label>
+        </div>
         </div>
 
         <div class="footer">
