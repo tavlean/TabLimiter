@@ -30,6 +30,44 @@ const updateBadge = (options) => {
 
 let $inputs;
 
+// Update tab count displays
+const updateTabCounts = async () => {
+    try {
+        // Get current options
+        const options = await new Promise((resolve) => {
+            browserRef.storage.sync.get("defaultOptions", (defaults) => {
+                browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
+                    resolve(opts);
+                });
+            });
+        });
+
+        // Get global tab count
+        const globalTabs = await tabQuery(options);
+        const globalOpen = globalTabs.length;
+        const globalLeft = Math.max(0, options.maxTotal - globalOpen);
+        
+        // Get current window tab count
+        const windowTabs = await tabQuery(options, { currentWindow: true });
+        const windowOpen = windowTabs.length;
+        const windowLeft = Math.max(0, options.maxWindow - windowOpen);
+
+        // Update displays
+        const globalCountEl = document.getElementById("globalTabCount");
+        const windowCountEl = document.getElementById("windowTabCount");
+        
+        if (globalCountEl) {
+            globalCountEl.textContent = `${globalOpen} open, ${globalLeft} left`;
+        }
+        
+        if (windowCountEl) {
+            windowCountEl.textContent = `${windowOpen} open, ${windowLeft} left`;
+        }
+    } catch (error) {
+        console.error("Error updating tab counts:", error);
+    }
+};
+
 // Collect and save options to storage
 const saveOptions = () => {
     // Collect all checkbox and number inputs
@@ -58,6 +96,7 @@ const saveOptions = () => {
         }
 
         updateBadge(options);
+        updateTabCounts(); // Update tab counts when options are saved
     });
 };
 
@@ -83,6 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Cache inputs first, then restore their values
     $inputs = document.querySelectorAll('input[type="checkbox"], input[type="number"]');
     restoreOptions();
+    updateTabCounts(); // Update tab counts on page load
 
     // Wire up change/keyup events for auto-save
     const onChangeInputs = document.querySelectorAll(
@@ -117,6 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             input.value = newValue;
             input.dispatchEvent(new Event("change", { bubbles: true }));
+            updateTabCounts(); // Update tab counts when stepper buttons are clicked
         });
     });
 
@@ -133,4 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (e) {
         // no-op
     }
+
+    // Update tab counts periodically to keep them current
+    setInterval(updateTabCounts, 1000);
 });
