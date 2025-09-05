@@ -31,6 +31,27 @@ const updateBadge = (options) => {
 let $inputs;
 let currentView = 'main'; // 'main' or 'settings'
 
+// Update progress bar color based on percentage
+const updateProgressBarColor = (progressEl, percentage) => {
+    // Remove all existing color classes
+    progressEl.classList.remove('purple', 'blue', 'green', 'yellow', 'orange', 'red');
+    
+    // Add appropriate color class based on percentage ranges
+    if (percentage <= 20) {
+        progressEl.classList.add('purple');
+    } else if (percentage <= 40) {
+        progressEl.classList.add('blue');
+    } else if (percentage <= 60) {
+        progressEl.classList.add('green');
+    } else if (percentage <= 75) {
+        progressEl.classList.add('yellow');
+    } else if (percentage <= 90) {
+        progressEl.classList.add('orange');
+    } else {
+        progressEl.classList.add('red');
+    }
+};
+
 // Update tab count displays
 const updateTabCounts = async () => {
     try {
@@ -79,6 +100,7 @@ const updateTabCounts = async () => {
         if (globalProgressEl) {
             const globalProgress = Math.min(100, (globalOpen / options.maxTotal) * 100);
             globalProgressEl.style.width = `${globalProgress}%`;
+            updateProgressBarColor(globalProgressEl, globalProgress);
         }
         
         if (windowOpenEl) {
@@ -92,6 +114,7 @@ const updateTabCounts = async () => {
         if (windowProgressEl) {
             const windowProgress = Math.min(100, (windowOpen / options.maxWindow) * 100);
             windowProgressEl.style.width = `${windowProgress}%`;
+            updateProgressBarColor(windowProgressEl, windowProgress);
         }
         
         if (windowBadgeEl) {
