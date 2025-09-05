@@ -52,16 +52,49 @@ const updateTabCounts = async () => {
         const windowOpen = windowTabs.length;
         const windowLeft = Math.max(0, options.maxWindow - windowOpen);
 
-        // Update displays
-        const globalCountEl = document.getElementById("globalTabCount");
-        const windowCountEl = document.getElementById("windowTabCount");
+        // Get window count
+        const windows = await new Promise((resolve) => {
+            browserRef.windows.getAll({ populate: false }, (wins) => resolve(wins));
+        });
+        const windowCount = windows.length;
+
+        // Update progress bars and labels
+        const globalOpenEl = document.getElementById("globalOpenCount");
+        const globalLeftEl = document.getElementById("globalLeftCount");
+        const globalProgressEl = document.getElementById("globalProgressFill");
+        const windowOpenEl = document.getElementById("windowOpenCount");
+        const windowLeftEl = document.getElementById("windowLeftCount");
+        const windowProgressEl = document.getElementById("windowProgressFill");
+        const windowBadgeEl = document.getElementById("windowCountBadge");
         
-        if (globalCountEl) {
-            globalCountEl.textContent = `${globalOpen} open, ${globalLeft} left`;
+        if (globalOpenEl) {
+            globalOpenEl.textContent = `${globalOpen} open`;
         }
         
-        if (windowCountEl) {
-            windowCountEl.textContent = `${windowOpen} open, ${windowLeft} left`;
+        if (globalLeftEl) {
+            globalLeftEl.textContent = `${globalLeft} left`;
+        }
+        
+        if (globalProgressEl) {
+            const globalProgress = Math.min(100, (globalOpen / options.maxTotal) * 100);
+            globalProgressEl.style.width = `${globalProgress}%`;
+        }
+        
+        if (windowOpenEl) {
+            windowOpenEl.textContent = `${windowOpen} open`;
+        }
+        
+        if (windowLeftEl) {
+            windowLeftEl.textContent = `${windowLeft} left`;
+        }
+        
+        if (windowProgressEl) {
+            const windowProgress = Math.min(100, (windowOpen / options.maxWindow) * 100);
+            windowProgressEl.style.width = `${windowProgress}%`;
+        }
+        
+        if (windowBadgeEl) {
+            windowBadgeEl.textContent = windowCount;
         }
     } catch (error) {
         console.error("Error updating tab counts:", error);
