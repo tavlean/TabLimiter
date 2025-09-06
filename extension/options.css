@@ -63,6 +63,9 @@ body {
     color: var(--text-primary);
     min-width: 320px;
     max-width: 420px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Header */
@@ -71,8 +74,8 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 6px;
-    margin-bottom: 12px;
-    padding-bottom: 12px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
 }
 
 .header-left {
@@ -105,7 +108,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding: 8px 0;
+    padding: 8px 0 24px 0;
 }
 
 /* Card */
@@ -426,9 +429,9 @@ body {
 
 /* Footer */
 .footer {
-    /* margin-top: 12px; */
     padding-block: 12px;
     text-align: center;
+    margin-top: auto; /* Pushes footer to bottom in flex container */
 }
 
 #status {
@@ -488,6 +491,26 @@ body {
 /* View containers */
 .view-container {
     transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Main view styling */
+#mainView {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Settings view specific styling */
+#settingsView {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0; /* Allow flex to control height */
+}
+
+#settingsView .section {
+    flex: 1;
+    margin-bottom: 16px;
 }
 
 .view-container.hidden {

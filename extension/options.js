@@ -131,6 +131,7 @@ const toggleView = () => {
     const settingsView = document.getElementById('settingsView');
     const settingsToggle = document.getElementById('settingsToggle');
     const settingsIcon = settingsToggle.querySelector('.settings-icon');
+    const subtitle = document.getElementById('subtitle');
     
     if (currentView === 'main') {
         // Switch to settings view
@@ -138,6 +139,11 @@ const toggleView = () => {
         settingsView.classList.remove('hidden');
         settingsToggle.setAttribute('aria-expanded', 'true');
         settingsToggle.setAttribute('aria-label', 'Close settings');
+        
+        // Show subtitle
+        if (subtitle) {
+            subtitle.classList.remove('hidden');
+        }
         
         // Change icon to X/close
         settingsIcon.innerHTML = `
@@ -153,6 +159,11 @@ const toggleView = () => {
         mainView.classList.remove('hidden');
         settingsToggle.setAttribute('aria-expanded', 'false');
         settingsToggle.setAttribute('aria-label', 'Toggle settings');
+        
+        // Hide subtitle
+        if (subtitle) {
+            subtitle.classList.add('hidden');
+        }
         
         // Change icon back to settings gear
         settingsIcon.innerHTML = `
@@ -173,6 +184,12 @@ const loadViewPreference = () => {
     browserRef.storage.sync.get(['optionsView'], (result) => {
         if (result.optionsView === 'settings') {
             toggleView();
+        } else {
+            // Ensure subtitle is hidden in main view
+            const subtitle = document.getElementById('subtitle');
+            if (subtitle) {
+                subtitle.classList.add('hidden');
+            }
         }
     });
 };
