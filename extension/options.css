@@ -24,6 +24,7 @@
     --bg-tertiary: var(--gray-700);
     --bg-quaternary: var(--gray-600);
     --bg-body: linear-gradient(135deg, var(--bg-tertiary), var(--bg-primary));
+    --bg-card: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
 
     --border-color: var(--gray-700);
 
@@ -61,7 +62,7 @@ body {
     padding: 16px 22px;
     background: var(--bg-body);
     color: var(--text-primary);
-    min-width: 320px;
+    min-width: 340px;
     max-width: 420px;
     min-height: 100vh;
     display: flex;
@@ -91,6 +92,7 @@ body {
 
 .header h1 {
     font-size: 16px;
+    line-height: 1;
     font-weight: 700;
     letter-spacing: -0.4px;
     margin: 0;
