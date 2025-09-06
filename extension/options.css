@@ -50,6 +50,12 @@
     transition: opacity 0.2s ease;
 }
 
+/* Ensure images inherit current color */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
 html,
 body {
     height: 100%;
@@ -134,7 +140,7 @@ body {
 .card-icon {
     width: 18px;
     height: 18px;
-    color: var(--text-tertiary);
+    opacity: 0.8;
 }
 
 .card-header h2 {
@@ -488,8 +494,8 @@ body {
 }
 
 .settings-icon {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
 }
 
 /* View containers */
