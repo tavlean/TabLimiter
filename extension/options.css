@@ -23,10 +23,11 @@
     --bg-secondary: var(--gray-800);
     --bg-tertiary: var(--gray-700);
     --bg-quaternary: var(--gray-600);
-    --bg-body: linear-gradient(135deg, var(--bg-tertiary), var(--bg-primary));
-    --bg-card: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+    --bg-body: linear-gradient(135deg, var(--gray-800), var(--gray-900));
+    --bg-card: linear-gradient(135deg, var(--gray-700), var(--gray-800));
 
     --border-color: var(--gray-700);
+    --card-border: 1px solid linear-gradient(135deg, var(--gray-600), var(--gray-700));
 
     --success-color: #10b981;
 
@@ -59,7 +60,7 @@ body {
     font-size: var(--font-size);
     line-height: var(--line-height);
     margin: 0;
-    padding: 16px 22px;
+    padding: 16px 32px;
     background: var(--bg-body);
     color: var(--text-primary);
     min-width: 340px;
@@ -67,6 +68,7 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    gap: 16px;
 }
 
 /* Header */
@@ -75,8 +77,8 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 6px;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
+    /* margin-bottom: 8px; */
+    /* padding-bottom: 8px; */
 }
 
 .header-left {
@@ -109,14 +111,14 @@ body {
 .cards-container {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 8px 0 24px 0;
+    gap: 24px;
+    padding-bottom: 32px;
 }
 
 /* Card */
 .card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    border: var(--card-border);
     border-radius: var(--border-radius);
     padding: 16px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
