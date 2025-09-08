@@ -434,25 +434,6 @@ body {
     padding-bottom: 16px;
 }
 
-/* Footer */
-.footer {
-    padding-block: 12px;
-    text-align: center;
-    margin-top: auto; /* Pushes footer to bottom in flex container */
-}
-
-#status {
-    font-size: 11px;
-    color: var(--text-quinary);
-    animation: fadeIn 0.2s ease;
-    transition: color 0.2s, opacity 0.2s;
-}
-
-#status.notice {
-    color: var(--success-color);
-    font-weight: 500;
-}
-
 .invisible {
     opacity: 0.8;
 }
