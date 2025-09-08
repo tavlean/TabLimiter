@@ -90,11 +90,11 @@ const updateTabCounts = async () => {
         const windowBadgeEl = document.getElementById("windowCountBadge");
 
         if (globalOpenEl) {
-            globalOpenEl.textContent = `${globalOpen} open`;
+            globalOpenEl.textContent = globalOpen;
         }
 
         if (globalLeftEl) {
-            globalLeftEl.textContent = `${globalLeft} left`;
+            globalLeftEl.textContent = globalLeft;
         }
 
         if (globalProgressEl) {
@@ -104,11 +104,11 @@ const updateTabCounts = async () => {
         }
 
         if (windowOpenEl) {
-            windowOpenEl.textContent = `${windowOpen} open`;
+            windowOpenEl.textContent = windowOpen;
         }
 
         if (windowLeftEl) {
-            windowLeftEl.textContent = `${windowLeft} left`;
+            windowLeftEl.textContent = windowLeft;
         }
 
         if (windowProgressEl) {

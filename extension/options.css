@@ -134,7 +134,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .card-header h2 {
@@ -161,7 +161,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
 }
 
 .stepper-group {
@@ -181,7 +181,7 @@ body {
 .progress-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     width: 220px;
 }
 
@@ -204,17 +204,25 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.progress-item {
+    display: flex;
+    align-items: baseline;
+}
+
+.progress-number {
     font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+.progress-text {
+    font-size: 13px;
     color: var(--text-quaternary);
     font-weight: 500;
-}
-
-.progress-open {
-    color: var(--text-secondary);
-}
-
-.progress-left {
-    color: var(--text-quaternary);
+    opacity: 0.9;
 }
 
 /* Sections */
