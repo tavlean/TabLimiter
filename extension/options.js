@@ -29,26 +29,26 @@ const updateBadge = (options) => {
 // ---------------------------------------------------------------------------
 
 let $inputs;
-let currentView = 'main'; // 'main' or 'settings'
+let currentView = "main"; // 'main' or 'settings'
 
 // Update progress bar color based on percentage
 const updateProgressBarColor = (progressEl, percentage) => {
     // Remove all existing color classes
-    progressEl.classList.remove('purple', 'blue', 'green', 'yellow', 'orange', 'red');
-    
+    progressEl.classList.remove("purple", "blue", "green", "yellow", "orange", "red");
+
     // Add appropriate color class based on percentage ranges
     if (percentage <= 20) {
-        progressEl.classList.add('purple');
+        progressEl.classList.add("purple");
     } else if (percentage <= 40) {
-        progressEl.classList.add('blue');
+        progressEl.classList.add("blue");
     } else if (percentage <= 60) {
-        progressEl.classList.add('green');
+        progressEl.classList.add("green");
     } else if (percentage <= 75) {
-        progressEl.classList.add('yellow');
+        progressEl.classList.add("yellow");
     } else if (percentage <= 90) {
-        progressEl.classList.add('orange');
+        progressEl.classList.add("orange");
     } else {
-        progressEl.classList.add('red');
+        progressEl.classList.add("red");
     }
 };
 
@@ -68,7 +68,7 @@ const updateTabCounts = async () => {
         const globalTabs = await tabQuery(options);
         const globalOpen = globalTabs.length;
         const globalLeft = Math.max(0, options.maxTotal - globalOpen);
-        
+
         // Get current window tab count
         const windowTabs = await tabQuery(options, { currentWindow: true });
         const windowOpen = windowTabs.length;
@@ -88,35 +88,35 @@ const updateTabCounts = async () => {
         const windowLeftEl = document.getElementById("windowLeftCount");
         const windowProgressEl = document.getElementById("windowProgressFill");
         const windowBadgeEl = document.getElementById("windowCountBadge");
-        
+
         if (globalOpenEl) {
             globalOpenEl.textContent = `${globalOpen} open`;
         }
-        
+
         if (globalLeftEl) {
             globalLeftEl.textContent = `${globalLeft} left`;
         }
-        
+
         if (globalProgressEl) {
             const globalProgress = Math.min(100, (globalOpen / options.maxTotal) * 100);
             globalProgressEl.style.width = `${globalProgress}%`;
             updateProgressBarColor(globalProgressEl, globalProgress);
         }
-        
+
         if (windowOpenEl) {
             windowOpenEl.textContent = `${windowOpen} open`;
         }
-        
+
         if (windowLeftEl) {
             windowLeftEl.textContent = `${windowLeft} left`;
         }
-        
+
         if (windowProgressEl) {
             const windowProgress = Math.min(100, (windowOpen / options.maxWindow) * 100);
             windowProgressEl.style.width = `${windowProgress}%`;
             updateProgressBarColor(windowProgressEl, windowProgress);
         }
-        
+
         if (windowBadgeEl) {
             windowBadgeEl.textContent = windowCount;
         }
@@ -127,62 +127,62 @@ const updateTabCounts = async () => {
 
 // Toggle between main view and settings view
 const toggleView = () => {
-    const mainView = document.getElementById('mainView');
-    const settingsView = document.getElementById('settingsView');
-    const settingsToggle = document.getElementById('settingsToggle');
-    const settingsIcon = settingsToggle.querySelector('.settings-icon');
-    const subtitle = document.getElementById('subtitle');
-    
-    if (currentView === 'main') {
+    const mainView = document.getElementById("mainView");
+    const settingsView = document.getElementById("settingsView");
+    const settingsToggle = document.getElementById("settingsToggle");
+    const settingsIcon = settingsToggle.querySelector(".settings-icon");
+    const subtitle = document.getElementById("subtitle");
+
+    if (currentView === "main") {
         // Switch to settings view
-        mainView.classList.add('hidden');
-        settingsView.classList.remove('hidden');
-        settingsToggle.setAttribute('aria-expanded', 'true');
-        settingsToggle.setAttribute('aria-label', 'Close settings');
-        
+        mainView.classList.add("hidden");
+        settingsView.classList.remove("hidden");
+        settingsToggle.setAttribute("aria-expanded", "true");
+        settingsToggle.setAttribute("aria-label", "Close settings");
+
         // Show subtitle
         if (subtitle) {
-            subtitle.classList.remove('hidden');
+            subtitle.classList.remove("hidden");
         }
-        
+
         // Change icon to X/close
-        settingsIcon.src = 'icons/close.svg';
-        settingsIcon.alt = 'Close settings';
-        
-        currentView = 'settings';
+        settingsIcon.src = "icons/close.svg";
+        settingsIcon.alt = "Close settings";
+
+        currentView = "settings";
     } else {
         // Switch to main view
-        settingsView.classList.add('hidden');
-        mainView.classList.remove('hidden');
-        settingsToggle.setAttribute('aria-expanded', 'false');
-        settingsToggle.setAttribute('aria-label', 'Toggle settings');
-        
+        settingsView.classList.add("hidden");
+        mainView.classList.remove("hidden");
+        settingsToggle.setAttribute("aria-expanded", "false");
+        settingsToggle.setAttribute("aria-label", "Toggle settings");
+
         // Hide subtitle
         if (subtitle) {
-            subtitle.classList.add('hidden');
+            subtitle.classList.add("hidden");
         }
-        
+
         // Change icon back to settings gear
-        settingsIcon.src = 'icons/settings.svg';
-        settingsIcon.alt = 'Toggle settings';
-        
-        currentView = 'main';
+        settingsIcon.src = "icons/settings.svg";
+        settingsIcon.alt = "Toggle settings";
+
+        currentView = "main";
     }
-    
+
     // Save current view to storage
     browserRef.storage.sync.set({ optionsView: currentView });
 };
 
 // Load saved view preference
 const loadViewPreference = () => {
-    browserRef.storage.sync.get(['optionsView'], (result) => {
-        if (result.optionsView === 'settings') {
+    browserRef.storage.sync.get(["optionsView"], (result) => {
+        if (result.optionsView === "settings") {
             toggleView();
         } else {
             // Ensure subtitle is hidden in main view
-            const subtitle = document.getElementById('subtitle');
+            const subtitle = document.getElementById("subtitle");
             if (subtitle) {
-                subtitle.classList.add('hidden');
+                subtitle.classList.add("hidden");
             }
         }
     });
@@ -205,16 +205,6 @@ const saveOptions = () => {
     const options = values;
 
     browserRef.storage.sync.set(options, () => {
-        // Update status to let user know options were saved.
-        const status = document.getElementById("status");
-        if (status) {
-            status.className = "notice";
-            status.textContent = "Options saved.";
-            setTimeout(() => {
-                status.className += " invisible";
-            }, 100);
-        }
-
         updateBadge(options);
         updateTabCounts(); // Update tab counts when options are saved
     });
@@ -246,9 +236,9 @@ document.addEventListener("DOMContentLoaded", () => {
     loadViewPreference(); // Load saved view preference
 
     // Settings toggle functionality
-    const settingsToggle = document.getElementById('settingsToggle');
+    const settingsToggle = document.getElementById("settingsToggle");
     if (settingsToggle) {
-        settingsToggle.addEventListener('click', toggleView);
+        settingsToggle.addEventListener("click", toggleView);
     }
 
     // Wire up change/keyup events for auto-save
