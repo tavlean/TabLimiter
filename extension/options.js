@@ -37,15 +37,15 @@ const updateProgressBarColor = (progressEl, percentage) => {
     progressEl.classList.remove("purple", "blue", "green", "yellow", "orange", "red");
 
     // Add appropriate color class based on percentage ranges
-    if (percentage <= 20) {
+    if (percentage <= 25) {
         progressEl.classList.add("purple");
-    } else if (percentage <= 40) {
+    } else if (percentage <= 45) {
         progressEl.classList.add("blue");
-    } else if (percentage <= 60) {
+    } else if (percentage <= 70) {
         progressEl.classList.add("green");
-    } else if (percentage <= 75) {
+    } else if (percentage <= 85) {
         progressEl.classList.add("yellow");
-    } else if (percentage <= 90) {
+    } else if (percentage < 100) {
         progressEl.classList.add("orange");
     } else {
         progressEl.classList.add("red");
