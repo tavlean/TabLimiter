@@ -7,10 +7,14 @@ Firefox Version - Coming Soon
 
 ## Features
 
--   Limit the number of open tabs in total
--   Limit the number of open tabs per window
--   Notify when the limit is reached
+-   Limit total open tabs in the browser
+-   Limit open tabs per window
+-   Show number of open tabs and remaining limit
+-   Beautiful progress bars for showing usage and limits
+-   Option to count or ignore pinned tabs
+-   Optional badge showing remaining tabs
+-   Option to open excess tabs in another window when the per‑window limit is reached
 
 ## Credits
 
-Originally created by Matthias Vogt (2016). Modernized, redesigned, and maintained by me now.
+Originally created by Matthias Vogt (2016). Modernized, redesigned, developed and maintained by Tavlean now.

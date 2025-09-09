@@ -23,87 +23,154 @@
 
     <body>
         <div class="header">
-            <img
-                src="icons/Icon32.png"
-                alt="Tab Limiter"
-                class="header-icon"
-            />
-            <h1>Tab Limiter</h1>
-            <div class="subtitle">| Options</div>
+            <div class="header-left">
+                <img
+                    src="icons/Icon32.png"
+                    alt="Tab Limiter"
+                    class="header-icon"
+                />
+                <h1>Tab Limiter</h1>
+                <div class="subtitle hidden" id="subtitle">| Settings</div>
+            </div>
+            <button
+                type="button"
+                id="settingsToggle"
+                class="settings-btn"
+                aria-label="Toggle settings"
+                aria-expanded="false"
+            >
+                <img src="icons/settings.svg" alt="Settings" class="settings-icon" />
+            </button>
         </div>
 
-        <div class="section stepper-section">
-            <div class="input-group">
-                <label for="maxTotal">Maximum total tabs</label>
-                <div class="stepper-container">
-                    <button
-                        type="button"
-                        class="stepper-btn"
-                        data-input="maxTotal"
-                        data-action="decrement"
-                        aria-label="Decrease maximum total tabs"
-                    >
-                        –
-                    </button>
-                    <input
-                        id="maxTotal"
-                        type="number"
-                        min="1"
-                        max="1337"
-                        class="stepper-input"
-                        value="50"
-                        inputmode="numeric"
-                        aria-live="polite"
-                    />
-                    <button
-                        type="button"
-                        class="stepper-btn"
-                        data-input="maxTotal"
-                        data-action="increment"
-                        aria-label="Increase maximum total tabs"
-                    >
-                        +
-                    </button>
+        <div id="mainView" class="view-container">
+            <div class="cards-container">
+            <!-- Window Card -->
+            <div class="card">
+                <div class="card-header">
+                    <img src="icons/window.svg" alt="Window" class="card-icon"/>
+                    <h2>Window</h2>
+                </div>
+                
+                <div class="card-content">
+                    <div class="stepper-group">
+                        <div class="stepper-container">
+                            <button
+                                type="button"
+                                class="stepper-btn"
+                                data-input="maxWindow"
+                                data-action="decrement"
+                                aria-label="Decrease maximum tabs per window"
+                            >
+                                –
+                            </button>
+                            <input
+                                id="maxWindow"
+                                type="number"
+                                min="1"
+                                max="1337"
+                                class="stepper-input"
+                                value="20"
+                                inputmode="numeric"
+                                aria-live="polite"
+                            />
+                            <button
+                                type="button"
+                                class="stepper-btn"
+                                data-input="maxWindow"
+                                data-action="increment"
+                                aria-label="Increase maximum tabs per window"
+                            >
+                                +
+                            </button>
+                        </div>
+                        <label class="stepper-label">max tabs / window</label>
+                    </div>
+                    
+                    <div class="progress-group">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="windowProgressFill"></div>
+                        </div>
+                        <div class="progress-labels">
+                            <span class="progress-item">
+                                <span class="progress-number" id="windowOpenCount">0</span>
+                                <span class="progress-text">open</span>
+                            </span>
+                            <span class="progress-item">
+                                <span class="progress-number" id="windowLeftCount">0</span>
+                                <span class="progress-text">left</span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="input-group">
-                <label for="maxWindow">Maximum tabs per window</label>
-                <div class="stepper-container">
-                    <button
-                        type="button"
-                        class="stepper-btn"
-                        data-input="maxWindow"
-                        data-action="decrement"
-                        aria-label="Decrease maximum tabs per window"
-                    >
-                        –
-                    </button>
-                    <input
-                        id="maxWindow"
-                        type="number"
-                        min="1"
-                        max="1337"
-                        class="stepper-input"
-                        value="20"
-                        inputmode="numeric"
-                        aria-live="polite"
-                    />
-                    <button
-                        type="button"
-                        class="stepper-btn"
-                        data-input="maxWindow"
-                        data-action="increment"
-                        aria-label="Increase maximum tabs per window"
-                    >
-                        +
-                    </button>
+            <!-- All Windows Card -->
+            <div class="card">
+                <div class="card-header">
+                    <img src="icons/windows.svg" alt="All Windows" class="card-icon"/>
+                    <h2>All Windows</h2>
+                    <span class="window-badge" id="windowCountBadge">1</span>
+                </div>
+                
+                <div class="card-content">
+                    <div class="stepper-group">
+                        <div class="stepper-container">
+                            <button
+                                type="button"
+                                class="stepper-btn"
+                                data-input="maxTotal"
+                                data-action="decrement"
+                                aria-label="Decrease maximum total tabs"
+                            >
+                                –
+                            </button>
+                            <input
+                                id="maxTotal"
+                                type="number"
+                                min="1"
+                                max="1337"
+                                class="stepper-input"
+                                value="50"
+                                inputmode="numeric"
+                                aria-live="polite"
+                            />
+                            <button
+                                type="button"
+                                class="stepper-btn"
+                                data-input="maxTotal"
+                                data-action="increment"
+                                aria-label="Increase maximum total tabs"
+                            >
+                                +
+                            </button>
+                        </div>
+                        <label class="stepper-label">max tabs total</label>
+                    </div>
+                    
+                    <div class="progress-group">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="globalProgressFill"></div>
+                        </div>
+                        <div class="progress-labels">
+                            <span class="progress-item">
+                                <span class="progress-number" id="globalOpenCount">0</span>
+                                <span class="progress-text">open</span>
+                            </span>
+                            <span class="progress-item">
+                                <span class="progress-number" id="globalLeftCount">0</span>
+                                <span class="progress-text">left</span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+        </div>
 
-        <div class="section">
-            <label class="toggle-row">
+        <div id="settingsView" class="view-container hidden">
+            <div class="section">
+                <label class="toggle-row">
                 <input
                     id="displayBadge"
                     type="checkbox"
@@ -134,10 +201,6 @@
                     <div class="label-desc">Show alert when limit is reached</div>
                 </div>
             </label>
-        </div>
-
-        <div class="section last-section">
-            <h2>Behavior</h2>
 
             <label class="toggle-row">
                 <input
@@ -150,7 +213,8 @@
                     aria-hidden="true"
                 ></span>
                 <div class="toggle-text">
-                    <div class="label-solo">Open extra tabs in new window</div>
+                    <div class="label-title">Balance Tabs</div>
+                    <div class="label-desc">Open extra tabs in other window</div>
                 </div>
             </label>
 
@@ -165,13 +229,10 @@
                     aria-hidden="true"
                 ></span>
                 <div class="toggle-text">
-                    <div class="label-solo">Count pinned tabs towards limits</div>
+                    <div class="label-title">Count Pinned</div>
+                    <div class="label-desc">Pinned tabs count towards the limit</div>
                 </div>
             </label>
-        </div>
-
-        <div class="footer">
-            <div id="status">Settings auto-save as you change them</div>
         </div>
     </body>
 </html>
