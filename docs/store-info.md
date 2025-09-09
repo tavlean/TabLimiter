@@ -6,11 +6,13 @@
 
 #### Description
 
--   Limit total number of open tabs.
--   Limit number of open tabs per window.
--   Option to count or ignore pinned tabs.
--   Optional badge showing remaining tabs.
--   Option to open excess tabs in another window when the per‑window limit is reached.
+-   Limit total open tabs in the browser
+-   Limit open tabs per window
+-   Show number of open tabs and remaining limit
+-   Beautiful progress bars for showing usage and limits
+-   Option to count or ignore pinned tabs
+-   Optional badge showing remaining tabs
+-   Option to open excess tabs in another window when the per‑window limit is reached
 
 PS: Huge thanks to Matthias Vogt for the original idea and early implementation. This version is a ground‑up modernization and redesign by Tavlean.
 
