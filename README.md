@@ -17,4 +17,4 @@ Firefox Version - Coming Soon
 
 ## Credits
 
-Originally created by Matthias Vogt (2016). Modernized, redesigned, and maintained by Tavlean now.
+Originally created by Matthias Vogt (2016). Modernized, redesigned, developed and maintained by Tavlean now.
