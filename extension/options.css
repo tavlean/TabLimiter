@@ -570,6 +570,13 @@ body {
     color: var(--text-primary);
 }
 
+.domain-name.special-domain {
+    font-style: italic;
+    color: var(--text-tertiary);
+    background: var(--bg-tertiary);
+    border-style: dashed;
+}
+
 /* Responsive behavior for domain name */
 @media (max-width: 380px) {
     .domain-name {

@@ -61,7 +61,7 @@
     -   Update domain display when active tab changes
     -   _Requirements: 2.2, 2.3, 2.4, 2.5, 6.2_
 
--   [ ] 9. Add domain name display functionality
+-   [x] 9. Add domain name display functionality
 
     -   Implement getCurrentDomain function to extract domain from active tab
     -   Add domain name display updates to tab switching logic

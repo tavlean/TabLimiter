@@ -119,6 +119,23 @@ const getDomainInfo = async (domain, options) => {
     }
 };
 
+const getCurrentDomain = async () => {
+    try {
+        const [activeTab] = await new Promise((resolve) =>
+            browserRef.tabs.query({ active: true, currentWindow: true }, resolve)
+        );
+
+        if (!activeTab) {
+            return null;
+        }
+
+        return extractDomainFromUrl(activeTab.url);
+    } catch (error) {
+        console.error("Error getting current domain:", error);
+        return null;
+    }
+};
+
 const getCurrentDomainInfo = async (options) => {
     try {
         const [activeTab] = await new Promise((resolve) =>
@@ -296,15 +313,35 @@ const updateDomainProgress = async (options) => {
                 updateProgressBarColor(domainProgressEl, currentDomainInfo.percentage);
             }
 
-            // Update domain name display
+            // Update domain name display with improved formatting
             if (domainNameEl) {
-                // Truncate long domain names for better display
-                const displayName =
-                    currentDomainInfo.domain.length > 25
-                        ? currentDomainInfo.domain.substring(0, 22) + "..."
-                        : currentDomainInfo.domain;
+                const domain = currentDomainInfo.domain;
+                let displayName = domain;
+
+                // Handle special domain cases with better display names
+                if (domain === "system") {
+                    displayName = "System";
+                } else if (domain === "localhost") {
+                    displayName = "Localhost";
+                } else if (domain === "data") {
+                    displayName = "Data URL";
+                } else if (domain === "file") {
+                    displayName = "Local File";
+                } else if (domain === "unknown") {
+                    displayName = "Unknown";
+                } else {
+                    // Truncate long domain names for better display
+                    displayName = domain.length > 25 ? domain.substring(0, 22) + "..." : domain;
+                }
+
                 domainNameEl.textContent = displayName;
-                domainNameEl.title = currentDomainInfo.domain; // Full domain in tooltip
+                domainNameEl.title = domain; // Full domain in tooltip
+
+                // Add CSS class for styling special domains
+                domainNameEl.className = "domain-name";
+                if (["system", "localhost", "data", "file", "unknown"].includes(domain)) {
+                    domainNameEl.classList.add("special-domain");
+                }
             }
         } else {
             // Handle case when no active tab or domain info unavailable
@@ -322,6 +359,7 @@ const updateDomainProgress = async (options) => {
             if (domainNameEl) {
                 domainNameEl.textContent = "—";
                 domainNameEl.title = "";
+                domainNameEl.className = "domain-name";
             }
         }
     } catch (error) {
@@ -341,6 +379,7 @@ const updateDomainProgress = async (options) => {
         if (domainNameEl) {
             domainNameEl.textContent = "—";
             domainNameEl.title = "";
+            domainNameEl.className = "domain-name";
         }
     }
 };
