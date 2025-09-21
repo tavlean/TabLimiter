@@ -334,6 +334,32 @@ const updateTabCounts = async () => {
         if (windowBadgeEl) {
             windowBadgeEl.textContent = windowCount;
         }
+
+        // Update domain progress and counts
+        const currentDomainInfo = await getCurrentDomainInfo(options);
+        if (currentDomainInfo) {
+            const domainOpenEl = document.getElementById("domainOpenCount");
+            const domainLeftEl = document.getElementById("domainLeftCount");
+            const domainProgressEl = document.getElementById("domainProgressFill");
+            const domainNameEl = document.getElementById("currentDomainName");
+
+            if (domainOpenEl) {
+                domainOpenEl.textContent = currentDomainInfo.tabCount;
+            }
+
+            if (domainLeftEl) {
+                domainLeftEl.textContent = currentDomainInfo.remaining;
+            }
+
+            if (domainProgressEl) {
+                domainProgressEl.style.width = `${currentDomainInfo.percentage}%`;
+                updateProgressBarColor(domainProgressEl, currentDomainInfo.percentage);
+            }
+
+            if (domainNameEl) {
+                domainNameEl.textContent = currentDomainInfo.domain;
+            }
+        }
     } catch (error) {
         console.error("Error updating tab counts:", error);
     }
@@ -468,6 +494,30 @@ document.addEventListener("DOMContentLoaded", () => {
         onKeyupInputs[i].addEventListener("keyup", saveOptions);
     }
 
+    // Add specific validation for domain limit input
+    const domainInput = document.getElementById("maxDomain");
+    if (domainInput) {
+        domainInput.addEventListener("input", (event) => {
+            const value = parseInt(event.target.value, 10);
+            if (isNaN(value) || value < 1) {
+                event.target.value = 1;
+            } else if (value > 50) {
+                event.target.value = 50;
+            }
+        });
+
+        domainInput.addEventListener("blur", (event) => {
+            const value = parseInt(event.target.value, 10);
+            if (isNaN(value) || value < 1) {
+                event.target.value = 1;
+                event.target.dispatchEvent(new Event("change", { bubbles: true }));
+            } else if (value > 50) {
+                event.target.value = 50;
+                event.target.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+        });
+    }
+
     // Stepper button functionality
     const stepperButtons = document.querySelectorAll(".stepper-btn");
     stepperButtons.forEach((button) => {
@@ -484,6 +534,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 newValue = Math.min(currentValue + 1, max);
             } else {
                 newValue = Math.max(currentValue - 1, min);
+            }
+
+            // Additional validation for domain limit
+            if (inputId === "maxDomain") {
+                newValue = Math.max(1, Math.min(50, newValue));
             }
 
             input.value = newValue;

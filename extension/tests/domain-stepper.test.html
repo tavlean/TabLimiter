@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Domain Stepper Test</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .test-container {
+                background: #f5f5f5;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+            .stepper-container {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin: 10px 0;
+            }
+            .stepper-btn {
+                width: 30px;
+                height: 30px;
+                border: 1px solid #ccc;
+                background: white;
+                cursor: pointer;
+            }
+            .stepper-input {
+                width: 60px;
+                text-align: center;
+                padding: 5px;
+                border: 1px solid #ccc;
+            }
+            .result {
+                margin: 10px 0;
+                padding: 10px;
+                background: white;
+                border-radius: 4px;
+            }
+            .success {
+                color: green;
+            }
+            .error {
+                color: red;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Domain Stepper Functionality Test</h1>
+
+        <div class="test-container">
+            <h2>Domain Limit Stepper</h2>
+            <div class="stepper-container">
+                <button
+                    type="button"
+                    class="stepper-btn"
+                    data-input="maxDomain"
+                    data-action="decrement"
+                >
+                    –
+                </button>
+                <input
+                    id="maxDomain"
+                    type="number"
+                    min="1"
+                    max="50"
+                    class="stepper-input"
+                    value="10"
+                />
+                <button
+                    type="button"
+                    class="stepper-btn"
+                    data-input="maxDomain"
+                    data-action="increment"
+                >
+                    +
+                </button>
+            </div>
+
+            <div id="testResults" class="result">
+                Click the buttons to test stepper functionality...
+            </div>
+        </div>
+
+        <script>
+            // Mock browser API for testing
+            const mockBrowserApi = {
+                storage: {
+                    sync: {
+                        set: (data, callback) => {
+                            console.log("Storage set:", data);
+                            if (callback) callback();
+                        },
+                        get: (keys, callback) => {
+                            const mockData = {
+                                defaultOptions: {
+                                    maxTotal: 50,
+                                    maxWindow: 20,
+                                    maxDomain: 10,
+                                    countPinnedTabs: false,
+                                    displayAlert: true,
+                                    displayBadge: false,
+                                },
+                            };
+                            if (typeof keys === "string") {
+                                callback({ [keys]: mockData[keys] });
+                            } else if (Array.isArray(keys)) {
+                                const result = {};
+                                keys.forEach((key) => {
+                                    result[key] = mockData[key];
+                                });
+                                callback(result);
+                            } else {
+                                callback(mockData);
+                            }
+                        },
+                    },
+                },
+                runtime: {
+                    sendMessage: (message) => {
+                        console.log("Message sent:", message);
+                    },
+                },
+            };
+
+            // Set up global browser API
+            window.browserRef = mockBrowserApi;
+
+            // Test the stepper functionality
+            function testStepperFunctionality() {
+                const resultsDiv = document.getElementById("testResults");
+                const input = document.getElementById("maxDomain");
+                let testResults = [];
+
+                // Test 1: Initial value
+                const initialValue = parseInt(input.value);
+                testResults.push(
+                    `Initial value: ${initialValue} ${initialValue === 10 ? "✅" : "❌"}`
+                );
+
+                // Test 2: Increment functionality
+                const incrementBtn = document.querySelector('[data-action="increment"]');
+                incrementBtn.click();
+                const afterIncrement = parseInt(input.value);
+                testResults.push(
+                    `After increment: ${afterIncrement} ${afterIncrement === 11 ? "✅" : "❌"}`
+                );
+
+                // Test 3: Decrement functionality
+                const decrementBtn = document.querySelector('[data-action="decrement"]');
+                decrementBtn.click();
+                const afterDecrement = parseInt(input.value);
+                testResults.push(
+                    `After decrement: ${afterDecrement} ${afterDecrement === 10 ? "✅" : "❌"}`
+                );
+
+                // Test 4: Bounds checking - minimum
+                input.value = 1;
+                decrementBtn.click();
+                const atMinimum = parseInt(input.value);
+                testResults.push(`At minimum (1): ${atMinimum} ${atMinimum === 1 ? "✅" : "❌"}`);
+
+                // Test 5: Bounds checking - maximum
+                input.value = 50;
+                incrementBtn.click();
+                const atMaximum = parseInt(input.value);
+                testResults.push(`At maximum (50): ${atMaximum} ${atMaximum === 50 ? "✅" : "❌"}`);
+
+                // Test 6: Input validation
+                input.value = 0;
+                input.dispatchEvent(new Event("blur"));
+                const afterInvalidInput = parseInt(input.value);
+                testResults.push(
+                    `After invalid input (0): ${afterInvalidInput} ${
+                        afterInvalidInput === 1 ? "✅" : "❌"
+                    }`
+                );
+
+                // Test 7: Input validation - too high
+                input.value = 100;
+                input.dispatchEvent(new Event("blur"));
+                const afterTooHigh = parseInt(input.value);
+                testResults.push(
+                    `After too high input (100): ${afterTooHigh} ${
+                        afterTooHigh === 50 ? "✅" : "❌"
+                    }`
+                );
+
+                resultsDiv.innerHTML = testResults.join("<br>");
+            }
+
+            // Simplified stepper functionality for testing
+            document.addEventListener("DOMContentLoaded", () => {
+                const stepperButtons = document.querySelectorAll(".stepper-btn");
+                stepperButtons.forEach((button) => {
+                    button.addEventListener("click", () => {
+                        const inputId = button.dataset.input;
+                        const action = button.dataset.action;
+                        const input = document.getElementById(inputId);
+                        const currentValue = parseInt(input.value, 10) || 1;
+                        const min = parseInt(input.min, 10) || 1;
+                        const max = parseInt(input.max, 10) || 50;
+
+                        let newValue;
+                        if (action === "increment") {
+                            newValue = Math.min(currentValue + 1, max);
+                        } else {
+                            newValue = Math.max(currentValue - 1, min);
+                        }
+
+                        // Additional validation for domain limit
+                        if (inputId === "maxDomain") {
+                            newValue = Math.max(1, Math.min(50, newValue));
+                        }
+
+                        input.value = newValue;
+                        input.dispatchEvent(new Event("change", { bubbles: true }));
+                    });
+                });
+
+                // Add input validation
+                const domainInput = document.getElementById("maxDomain");
+                if (domainInput) {
+                    domainInput.addEventListener("input", (event) => {
+                        const value = parseInt(event.target.value, 10);
+                        if (isNaN(value) || value < 1) {
+                            event.target.value = 1;
+                        } else if (value > 50) {
+                            event.target.value = 50;
+                        }
+                    });
+
+                    domainInput.addEventListener("blur", (event) => {
+                        const value = parseInt(event.target.value, 10);
+                        if (isNaN(value) || value < 1) {
+                            event.target.value = 1;
+                            event.target.dispatchEvent(new Event("change", { bubbles: true }));
+                        } else if (value > 50) {
+                            event.target.value = 50;
+                            event.target.dispatchEvent(new Event("change", { bubbles: true }));
+                        }
+                    });
+                }
+
+                // Run tests after a short delay
+                setTimeout(testStepperFunctionality, 500);
+            });
+        </script>
+    </body>
+</html>

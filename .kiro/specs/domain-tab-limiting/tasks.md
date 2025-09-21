@@ -45,7 +45,7 @@
     -   Add hover states and transitions
     -   _Requirements: 2.1, 2.5_
 
--   [-] 7. Add domain stepper functionality to options.js
+-   [x] 7. Add domain stepper functionality to options.js
 
     -   Wire up domain stepper buttons to increment/decrement domain limit
     -   Add domain limit input validation and bounds checking
