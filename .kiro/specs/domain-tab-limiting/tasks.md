@@ -1,12 +1,12 @@
 # Implementation Plan
 
--   [ ] 1. Use domain icon and update manifest
+-   [x] 1. Use domain icon and update manifest
 
     -   use domain.svg icon file in extension/icons/ directory
     -   match existing icon style and theme
     -   _Requirements: 2.1_
 
--   [ ] 2. Implement core domain extraction and tracking utilities
+-   [x] 2. Implement core domain extraction and tracking utilities
 
     -   Add domain extraction function that handles various URL formats (http/https, www removal, special cases)
     -   Create domain counting logic that groups tabs by domain

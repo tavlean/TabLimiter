@@ -4,6 +4,152 @@ const tabQuery = (options, params = {}) =>
         chrome.tabs.query(params, (tabs) => res(tabs));
     });
 
+// Domain extraction and tracking utilities
+const extractDomainFromUrl = (url) => {
+    try {
+        // Handle special cases first
+        if (!url || typeof url !== "string") {
+            return "unknown";
+        }
+
+        // Handle chrome:// and extension URLs
+        if (
+            url.startsWith("chrome://") ||
+            url.startsWith("chrome-extension://") ||
+            url.startsWith("moz-extension://")
+        ) {
+            return "system";
+        }
+
+        // Handle data: and blob: URLs
+        if (url.startsWith("data:") || url.startsWith("blob:")) {
+            return "data";
+        }
+
+        // Handle file:// URLs
+        if (url.startsWith("file://")) {
+            return "file";
+        }
+
+        // Parse the URL
+        const urlObj = new URL(url);
+        let hostname = urlObj.hostname;
+
+        // Handle localhost and IP addresses
+        if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") {
+            return "localhost";
+        }
+
+        // Check if it's an IP address (IPv4)
+        const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        if (ipv4Regex.test(hostname)) {
+            return hostname; // Return IP as-is
+        }
+
+        // Check if it's an IPv6 address (enclosed in brackets)
+        if (hostname.startsWith("[") && hostname.endsWith("]")) {
+            return hostname; // Return IPv6 as-is
+        }
+
+        // Remove www. prefix if present
+        if (hostname.startsWith("www.")) {
+            hostname = hostname.substring(4);
+        }
+
+        // Return the cleaned hostname
+        return hostname || "unknown";
+    } catch (error) {
+        console.warn("Error extracting domain from URL:", url, error);
+        return "unknown";
+    }
+};
+
+const getDomainCounts = async (options) => {
+    try {
+        const tabs = await tabQuery(options);
+        const domainCounts = new Map();
+
+        tabs.forEach((tab) => {
+            const domain = extractDomainFromUrl(tab.url);
+            const currentCount = domainCounts.get(domain) || 0;
+            domainCounts.set(domain, currentCount + 1);
+        });
+
+        return domainCounts;
+    } catch (error) {
+        console.error("Error getting domain counts:", error);
+        return new Map();
+    }
+};
+
+const getDomainInfo = async (domain, options) => {
+    try {
+        const domainCounts = await getDomainCounts(options);
+        const tabCount = domainCounts.get(domain) || 0;
+        const limit = options.maxDomain || 10;
+        const remaining = Math.max(0, limit - tabCount);
+        const percentage = Math.min(100, (tabCount / limit) * 100);
+
+        return {
+            domain,
+            tabCount,
+            remaining,
+            limit,
+            percentage,
+        };
+    } catch (error) {
+        console.error("Error getting domain info:", error);
+        return {
+            domain,
+            tabCount: 0,
+            remaining: options.maxDomain || 10,
+            limit: options.maxDomain || 10,
+            percentage: 0,
+        };
+    }
+};
+
+const getCurrentDomainInfo = async (options) => {
+    try {
+        const [activeTab] = await new Promise((resolve) =>
+            chrome.tabs.query({ active: true, currentWindow: true }, resolve)
+        );
+
+        if (!activeTab) {
+            return null;
+        }
+
+        const domain = extractDomainFromUrl(activeTab.url);
+        return await getDomainInfo(domain, options);
+    } catch (error) {
+        console.error("Error getting current domain info:", error);
+        return null;
+    }
+};
+
+const getTopDomains = async (options, limit = 5) => {
+    try {
+        const domainCounts = await getDomainCounts(options);
+
+        // Convert to array and sort by count (descending)
+        const sortedDomains = Array.from(domainCounts.entries())
+            .map(([domain, tabCount]) => ({
+                domain,
+                tabCount,
+                remaining: Math.max(0, (options.maxDomain || 10) - tabCount),
+                limit: options.maxDomain || 10,
+                percentage: Math.min(100, (tabCount / (options.maxDomain || 10)) * 100),
+            }))
+            .sort((a, b) => b.tabCount - a.tabCount)
+            .slice(0, limit);
+
+        return sortedDomains;
+    } catch (error) {
+        console.error("Error getting top domains:", error);
+        return [];
+    }
+};
+
 const windowRemaining = (options) =>
     tabQuery(options, { currentWindow: true }).then((tabs) => options.maxWindow - tabs.length);
 
@@ -210,6 +356,7 @@ const init = () => {
         defaultOptions: {
             maxTotal: 50,
             maxWindow: 20,
+            maxDomain: 10,
             exceedTabNewWindow: false,
             displayAlert: true,
             countPinnedTabs: false,

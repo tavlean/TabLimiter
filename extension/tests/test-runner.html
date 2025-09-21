@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Domain Utils Test Runner</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }
+            .test-container {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                margin-bottom: 20px;
+            }
+            .test-results {
+                font-family: monospace;
+                background: #f8f8f8;
+                padding: 15px;
+                border-radius: 4px;
+                white-space: pre-wrap;
+                max-height: 400px;
+                overflow-y: auto;
+            }
+            .run-button {
+                background: #4caf50;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 16px;
+            }
+            .run-button:hover {
+                background: #45a049;
+            }
+            .success {
+                color: #4caf50;
+            }
+            .error {
+                color: #f44336;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="test-container">
+            <h1>Domain Utilities Test Runner</h1>
+            <p>
+                This page tests the domain extraction and counting utilities for the Tab Limiter
+                extension.
+            </p>
+
+            <button class="run-button" onclick="runTests()">Run Tests</button>
+
+            <div id="results" class="test-results">
+                Click "Run Tests" to execute the domain utility tests.
+            </div>
+        </div>
+
+        <script src="domain-utils.test.js"></script>
+        <script>
+            function runTests() {
+                const resultsDiv = document.getElementById("results");
+
+                // Capture console output
+                const originalLog = console.log;
+                let output = "";
+
+                console.log = function (...args) {
+                    output += args.join(" ") + "\n";
+                    originalLog.apply(console, args);
+                };
+
+                try {
+                    // Run the tests
+                    const success = runAllTests();
+
+                    // Restore console.log
+                    console.log = originalLog;
+
+                    // Display results
+                    resultsDiv.innerHTML = output;
+                    resultsDiv.className = success ? "test-results success" : "test-results error";
+                } catch (error) {
+                    console.log = originalLog;
+                    resultsDiv.innerHTML = "Error running tests: " + error.message;
+                    resultsDiv.className = "test-results error";
+                }
+            }
+
+            // Auto-run tests on page load
+            window.addEventListener("load", () => {
+                setTimeout(runTests, 500);
+            });
+        </script>
+    </body>
+</html>
