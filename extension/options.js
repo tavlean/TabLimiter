@@ -344,7 +344,7 @@ const updateProgressBarColor = (progressEl, percentage) => {
 };
 
 // Update tab count displays
-const updateTabCounts = async () => {
+const updateTabCounts = async (updateDomains = false) => {
     try {
         // Get current options
         const options = await new Promise((resolve) => {
@@ -412,8 +412,10 @@ const updateTabCounts = async () => {
             windowBadgeEl.textContent = windowCount;
         }
 
-        // Update domain counts as well
-        await updateDomainCounts();
+        // Only update domain counts when explicitly requested or on initial load
+        if (updateDomains) {
+            await updateDomainCounts();
+        }
     } catch (error) {
         console.error("Error updating tab counts:", error);
     }
@@ -500,7 +502,7 @@ const saveOptions = () => {
 
     browserRef.storage.sync.set(options, () => {
         updateBadge(options);
-        updateTabCounts(); // Update tab counts when options are saved
+        updateTabCounts(true); // Update tab counts and domains when options are saved
     });
 };
 
@@ -526,7 +528,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Cache inputs first, then restore their values
     $inputs = document.querySelectorAll('input[type="checkbox"], input[type="number"]');
     restoreOptions();
-    updateTabCounts(); // Update tab counts and domain counts on page load
+    updateTabCounts(true); // Update tab counts and domain counts on page load
     loadViewPreference(); // Load saved view preference
 
     // Settings toggle functionality
@@ -568,7 +570,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             input.value = newValue;
             input.dispatchEvent(new Event("change", { bubbles: true }));
-            updateTabCounts(); // Update tab counts and domain counts when stepper buttons are clicked
+            updateTabCounts(); // Update tab counts when stepper buttons are clicked
         });
     });
 
@@ -586,6 +588,19 @@ document.addEventListener("DOMContentLoaded", () => {
         // no-op
     }
 
-    // Update tab counts periodically to keep them current
-    setInterval(updateTabCounts, 1000);
+    // Listen for tab changes to update counts and domains
+    if (browserRef.tabs && browserRef.tabs.onCreated) {
+        browserRef.tabs.onCreated.addListener(() => updateTabCounts(true));
+        browserRef.tabs.onRemoved.addListener(() => updateTabCounts(true));
+        browserRef.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+            // Only update if URL changed (affects domain counts)
+            if (changeInfo.url) {
+                updateTabCounts(true);
+            }
+        });
+    }
+
+    // Update tab counts periodically but less frequently (every 5 seconds)
+    // This is a fallback in case events are missed
+    setInterval(() => updateTabCounts(), 5000);
 });
