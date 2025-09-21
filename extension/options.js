@@ -27,6 +27,297 @@ const updateBadge = (options) => {
 };
 
 // ---------------------------------------------------------------------------
+// Domain Analysis Utility Functions
+
+/**
+ * Extract root domain from a URL
+ * @param {string} url - The URL to extract domain from
+ * @returns {string|null} - The root domain or null if invalid/excluded
+ */
+const extractDomain = (url) => {
+    try {
+        // Handle empty or invalid URLs
+        if (!url || typeof url !== "string") {
+            return null;
+        }
+
+        // Exclude special protocols that shouldn't be counted
+        const excludedProtocols = [
+            "chrome://",
+            "chrome-extension://",
+            "moz-extension://",
+            "edge-extension://",
+            "safari-extension://",
+            "file://",
+            "about:",
+            "data:",
+            "javascript:",
+            "blob:",
+        ];
+
+        const lowerUrl = url.toLowerCase();
+        for (const protocol of excludedProtocols) {
+            if (lowerUrl.startsWith(protocol)) {
+                return null;
+            }
+        }
+
+        // Parse the URL
+        const urlObj = new URL(url);
+        let hostname = urlObj.hostname.toLowerCase();
+
+        // Handle empty hostname
+        if (!hostname) {
+            return null;
+        }
+
+        // Handle IP addresses - return as-is
+        const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        const ipv6Regex = /^\[?([0-9a-f:]+)\]?$/i;
+        if (ipv4Regex.test(hostname) || ipv6Regex.test(hostname)) {
+            return hostname;
+        }
+
+        // Handle localhost
+        if (hostname === "localhost") {
+            return hostname;
+        }
+
+        // Extract root domain from hostname
+        const parts = hostname.split(".");
+
+        // Handle cases with insufficient parts
+        if (parts.length < 2) {
+            return hostname;
+        }
+
+        // For most domains, take the last two parts (domain.tld)
+        // This handles cases like:
+        // - mail.google.com -> google.com
+        // - subdomain.example.org -> example.org
+        let rootDomain = parts.slice(-2).join(".");
+
+        // Handle special cases for known multi-part TLDs
+        const multiPartTlds = [
+            "co.uk",
+            "co.jp",
+            "co.kr",
+            "co.za",
+            "co.nz",
+            "co.in",
+            "com.au",
+            "com.br",
+            "com.mx",
+            "com.ar",
+            "com.co",
+            "net.au",
+            "org.uk",
+            "ac.uk",
+            "gov.uk",
+            "edu.au",
+            "github.io",
+            "herokuapp.com",
+            "blogspot.com",
+            "wordpress.com",
+            "tumblr.com",
+        ];
+
+        // Check if we need to include more parts for multi-part TLDs
+        if (parts.length >= 3) {
+            const lastThreeParts = parts.slice(-3).join(".");
+            const lastTwoParts = parts.slice(-2).join(".");
+
+            for (const tld of multiPartTlds) {
+                if (lastThreeParts.endsWith(tld)) {
+                    rootDomain = lastThreeParts;
+                    break;
+                } else if (lastTwoParts === tld && parts.length >= 4) {
+                    rootDomain = parts.slice(-3).join(".");
+                    break;
+                }
+            }
+        }
+
+        return rootDomain;
+    } catch (error) {
+        // Return null for any parsing errors
+        return null;
+    }
+};
+
+/**
+ * Analyze all tabs and return domain statistics
+ * @param {Object} options - Extension options
+ * @returns {Promise<Array>} - Array of {domain, count} objects sorted by count
+ */
+const analyzeDomains = async (options) => {
+    try {
+        // Get all tabs using existing tabQuery function
+        const tabs = await tabQuery(options);
+
+        // Count tabs by domain
+        const domainCounts = new Map();
+
+        for (const tab of tabs) {
+            const domain = extractDomain(tab.url);
+
+            // Skip tabs without valid domains
+            if (!domain) {
+                continue;
+            }
+
+            // Increment count for this domain
+            const currentCount = domainCounts.get(domain) || 0;
+            domainCounts.set(domain, currentCount + 1);
+        }
+
+        // Convert to array and sort by count (descending)
+        const domainStats = Array.from(domainCounts.entries())
+            .map(([domain, count]) => ({ domain, count }))
+            .sort((a, b) => b.count - a.count);
+
+        return domainStats;
+    } catch (error) {
+        console.error("Error analyzing domains:", error);
+        return [];
+    }
+};
+
+/**
+ * Get top N domains with most tabs
+ * @param {Object} options - Extension options
+ * @param {number} limit - Maximum number of domains to return (default: 5)
+ * @returns {Promise<Array>} - Array of top domains with counts
+ */
+const getTopDomains = async (options, limit = 5) => {
+    try {
+        const allDomains = await analyzeDomains(options);
+        return allDomains.slice(0, limit);
+    } catch (error) {
+        console.error("Error getting top domains:", error);
+        return [];
+    }
+};
+
+// ---------------------------------------------------------------------------
+// Domain Card UI Rendering Functions
+
+/**
+ * Truncate domain name if it's too long
+ * @param {string} domain - The domain name to truncate
+ * @param {number} maxLength - Maximum length before truncation (default: 20)
+ * @returns {string} - Truncated domain name with ellipsis if needed
+ */
+const truncateDomain = (domain, maxLength = 20) => {
+    if (!domain || domain.length <= maxLength) {
+        return domain;
+    }
+    return domain.substring(0, maxLength - 1) + "…";
+};
+
+/**
+ * Render loading state for domains list
+ */
+const renderDomainsLoading = () => {
+    const domainsList = document.getElementById("domainsList");
+    if (!domainsList) return;
+
+    domainsList.innerHTML = `
+        <div class="domains-loading">
+            <span>Analyzing domains...</span>
+        </div>
+    `;
+};
+
+/**
+ * Render empty state for domains list
+ */
+const renderDomainsEmpty = () => {
+    const domainsList = document.getElementById("domainsList");
+    if (!domainsList) return;
+
+    domainsList.innerHTML = `
+        <div class="domains-empty">
+            <span>No domains found</span>
+            <span style="font-size: 12px; margin-top: 4px; opacity: 0.8;">Open some tabs to see domain statistics</span>
+        </div>
+    `;
+};
+
+/**
+ * Render error state for domains list
+ */
+const renderDomainsError = () => {
+    const domainsList = document.getElementById("domainsList");
+    if (!domainsList) return;
+
+    domainsList.innerHTML = `
+        <div class="domains-error">
+            <span>Unable to analyze domains</span>
+            <span style="font-size: 12px; margin-top: 4px; opacity: 0.8;">Please try refreshing the page</span>
+        </div>
+    `;
+};
+
+/**
+ * Render the domains list with domain statistics
+ * @param {Array} domains - Array of domain objects with {domain, count} properties
+ */
+const renderDomainsList = (domains) => {
+    const domainsList = document.getElementById("domainsList");
+    if (!domainsList) return;
+
+    // Handle empty domains array
+    if (!domains || domains.length === 0) {
+        renderDomainsEmpty();
+        return;
+    }
+
+    // Create HTML for domain items
+    const domainItems = domains
+        .map(({ domain, count }) => {
+            const truncatedDomain = truncateDomain(domain);
+            return `
+            <div class="domain-item">
+                <span class="domain-name" title="${domain}">${truncatedDomain}</span>
+                <span class="domain-count">${count}</span>
+            </div>
+        `;
+        })
+        .join("");
+
+    domainsList.innerHTML = domainItems;
+};
+
+/**
+ * Update domain counts and render the domains list
+ */
+const updateDomainCounts = async () => {
+    try {
+        // Show loading state
+        renderDomainsLoading();
+
+        // Get current options
+        const options = await new Promise((resolve) => {
+            browserRef.storage.sync.get("defaultOptions", (defaults) => {
+                browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
+                    resolve(opts);
+                });
+            });
+        });
+
+        // Get top 5 domains
+        const topDomains = await getTopDomains(options, 5);
+
+        // Render the domains list
+        renderDomainsList(topDomains);
+    } catch (error) {
+        console.error("Error updating domain counts:", error);
+        renderDomainsError();
+    }
+};
+
+// ---------------------------------------------------------------------------
 
 let $inputs;
 let currentView = "main"; // 'main' or 'settings'
@@ -120,6 +411,9 @@ const updateTabCounts = async () => {
         if (windowBadgeEl) {
             windowBadgeEl.textContent = windowCount;
         }
+
+        // Update domain counts as well
+        await updateDomainCounts();
     } catch (error) {
         console.error("Error updating tab counts:", error);
     }
@@ -232,7 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Cache inputs first, then restore their values
     $inputs = document.querySelectorAll('input[type="checkbox"], input[type="number"]');
     restoreOptions();
-    updateTabCounts(); // Update tab counts on page load
+    updateTabCounts(); // Update tab counts and domain counts on page load
     loadViewPreference(); // Load saved view preference
 
     // Settings toggle functionality
@@ -274,7 +568,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             input.value = newValue;
             input.dispatchEvent(new Event("change", { bubbles: true }));
-            updateTabCounts(); // Update tab counts when stepper buttons are clicked
+            updateTabCounts(); // Update tab counts and domain counts when stepper buttons are clicked
         });
     });
 
