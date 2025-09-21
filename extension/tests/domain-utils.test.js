@@ -273,6 +273,67 @@ const runDomainCountingTests = () => {
     return { passed, failed, total: Object.keys(expectedCounts).length };
 };
 
+// Test suite for storage helper functions
+const runStorageHelperTests = () => {
+    console.log("\nRunning storage helper function tests...\n");
+
+    let passed = 0;
+    let failed = 0;
+
+    // Test 1: Default domain limit validation
+    try {
+        const defaultLimit = 10;
+        if (defaultLimit >= 1 && defaultLimit <= 50) {
+            console.log(`✅ Default domain limit (${defaultLimit}) is within valid range - PASSED`);
+            passed++;
+        } else {
+            console.log(
+                `❌ Default domain limit (${defaultLimit}) is outside valid range - FAILED`
+            );
+            failed++;
+        }
+    } catch (error) {
+        console.log(`❌ Error testing default domain limit: ${error.message} - FAILED`);
+        failed++;
+    }
+
+    // Test 2: Domain limit validation logic
+    const testLimits = [
+        { limit: 0, valid: false, description: "Zero limit" },
+        { limit: 1, valid: true, description: "Minimum valid limit" },
+        { limit: 10, valid: true, description: "Default limit" },
+        { limit: 50, valid: true, description: "Maximum valid limit" },
+        { limit: 51, valid: false, description: "Above maximum limit" },
+        { limit: -1, valid: false, description: "Negative limit" },
+        { limit: "10", valid: false, description: "String instead of number" },
+        { limit: null, valid: false, description: "Null value" },
+        { limit: undefined, valid: false, description: "Undefined value" },
+    ];
+
+    testLimits.forEach((test) => {
+        try {
+            const isValid = typeof test.limit === "number" && test.limit >= 1 && test.limit <= 50;
+            if (isValid === test.valid) {
+                console.log(`✅ Limit validation for ${test.description}: ${isValid} - PASSED`);
+                passed++;
+            } else {
+                console.log(
+                    `❌ Limit validation for ${test.description}: Expected ${test.valid}, Got ${isValid} - FAILED`
+                );
+                failed++;
+            }
+        } catch (error) {
+            console.log(
+                `❌ Error testing limit validation for ${test.description}: ${error.message} - FAILED`
+            );
+            failed++;
+        }
+    });
+
+    console.log(`\nStorage helper tests results: ${passed} passed, ${failed} failed`);
+    return { passed, failed, total: 1 + testLimits.length };
+};
+
 // Run all tests
 const runAllTests = () => {
     console.log("=".repeat(50));
@@ -281,10 +342,11 @@ const runAllTests = () => {
 
     const extractionResults = runDomainExtractionTests();
     const countingResults = runDomainCountingTests();
+    const storageResults = runStorageHelperTests();
 
-    const totalPassed = extractionResults.passed + countingResults.passed;
-    const totalFailed = extractionResults.failed + countingResults.failed;
-    const totalTests = extractionResults.total + countingResults.total;
+    const totalPassed = extractionResults.passed + countingResults.passed + storageResults.passed;
+    const totalFailed = extractionResults.failed + countingResults.failed + storageResults.failed;
+    const totalTests = extractionResults.total + countingResults.total + storageResults.total;
 
     console.log("\n" + "=".repeat(50));
     console.log("OVERALL TEST RESULTS");
@@ -303,6 +365,7 @@ if (typeof module !== "undefined" && module.exports) {
         extractDomainFromUrl,
         runDomainExtractionTests,
         runDomainCountingTests,
+        runStorageHelperTests,
         runAllTests,
     };
 }

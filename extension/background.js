@@ -210,6 +210,55 @@ const getOptions = () =>
         });
     });
 
+// Domain limit storage helper functions
+const getDomainLimit = async (domain = null) => {
+    try {
+        const options = await getOptions();
+        // For now, return the global domain limit
+        // Future enhancement: support per-domain limits from options.domainLimits[domain]
+        return options.maxDomain || 10;
+    } catch (error) {
+        console.error("Error getting domain limit:", error);
+        return 10; // Default fallback
+    }
+};
+
+const setDomainLimit = async (limit) => {
+    try {
+        if (typeof limit !== "number" || limit < 1 || limit > 50) {
+            throw new Error("Domain limit must be a number between 1 and 50");
+        }
+
+        await new Promise((resolve, reject) => {
+            chrome.storage.sync.set({ maxDomain: limit }, () => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                } else {
+                    resolve();
+                }
+            });
+        });
+
+        // Update badge after changing domain limit
+        const options = await getOptions();
+        updateBadge(options);
+    } catch (error) {
+        console.error("Error setting domain limit:", error);
+        throw error;
+    }
+};
+
+const isDomainLimitExceeded = async (domain) => {
+    try {
+        const options = await getOptions();
+        const domainInfo = await getDomainInfo(domain, options);
+        return domainInfo.tabCount >= domainInfo.limit;
+    } catch (error) {
+        console.error("Error checking domain limit:", error);
+        return false; // Default to not exceeded on error
+    }
+};
+
 const displayAlert = (options, place, movedToOtherWindow = false) =>
     new Promise((res) => {
         if (!options.displayAlert) {

@@ -13,7 +13,7 @@
     -   Write unit tests for domain extraction with edge cases (localhost, IP addresses, chrome:// URLs)
     -   _Requirements: 1.1, 2.1, 6.4_
 
--   [ ] 3. Extend storage schema for domain limits
+-   [x] 3. Extend storage schema for domain limits
 
     -   Add maxDomain field to defaultOptions with default value of 10
     -   Update storage initialization in background.js to include domain settings
