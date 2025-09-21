@@ -4,11 +4,10 @@
 
 The domain-based tab limiting feature extends the existing Tab Limiter extension by adding a third dimension of tab management focused on preventing cognitive overload from distracting websites. The design maintains consistency with the existing UI patterns while introducing new components for domain tracking, visualization, and enforcement.
 
-The feature consists of three main components:
+The feature consists of two main components:
 
-1. **Domain Card**: A new card in the main view showing current domain limits and usage
-2. **Domain List**: An expandable section showing top domains with most tabs
-3. **Domain Enforcement**: Background logic to prevent exceeding domain limits
+1. **Domain Card**: A new card in the main view showing domain limits and a list of all domains with their usage
+2. **Domain Enforcement**: Background logic to prevent exceeding domain limits
 
 ## Architecture
 
@@ -48,7 +47,7 @@ Domains will be extracted from tab URLs using a consistent algorithm:
 ### 1. Domain Card Component
 
 **Location**: Between "All Windows" card and settings toggle
-**Structure**: Follows existing card pattern with header, stepper, and progress sections
+**Structure**: Follows existing card pattern with header, stepper, and domain list sections
 
 ```html
 <div class="card">
@@ -60,12 +59,24 @@ Domains will be extracted from tab URLs using a consistent algorithm:
         <div class="stepper-group">
             <!-- Stepper for domain limit (1-50 range) -->
         </div>
-        <div class="progress-group">
-            <!-- Progress bar for current domain -->
-            <!-- Labels showing open/remaining for current domain -->
-        </div>
-        <div class="domain-info">
-            <!-- Current domain name display -->
+        <div class="domain-list">
+            <div class="domain-list-header">
+                <span class="domain-list-title">Open Domains</span>
+            </div>
+            <div class="domain-list-content">
+                <div class="domain-item">
+                    <div class="domain-item-header">
+                        <span class="domain-name">youtube.com</span>
+                        <span class="domain-counts">8 / 10</span>
+                    </div>
+                    <div class="domain-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Repeat for all domains with tabs -->
+            </div>
         </div>
     </div>
 </div>
@@ -74,44 +85,10 @@ Domains will be extracted from tab URLs using a consistent algorithm:
 **Key Features**:
 
 -   Stepper control with range 1-50 (default: 10)
--   Progress bar using existing color scheme
--   Domain name display for active tab
--   Real-time updates when switching tabs
-
-### 2. Domain List Component
-
-**Location**: Below Domain card, initially collapsed
-**Structure**: Expandable section with chevron toggle
-
-```html
-<div class="domain-list-container">
-    <button class="domain-toggle" aria-expanded="false">
-        <svg class="chevron-icon"><!-- Down chevron --></svg>
-    </button>
-    <div class="domain-list hidden">
-        <div class="domain-item">
-            <div class="domain-name">youtube.com</div>
-            <div class="domain-progress">
-                <div class="progress-bar">
-                    <div class="progress-fill"></div>
-                </div>
-                <div class="domain-counts">
-                    <span>8 open</span>
-                    <span>2 left</span>
-                </div>
-            </div>
-        </div>
-        <!-- Repeat for top 5 domains -->
-    </div>
-</div>
-```
-
-**Key Features**:
-
--   Collapsible with smooth animation
--   Shows top 5 domains by tab count
--   Individual progress bars for each domain
--   Sorted in descending order by tab count
+-   Always-visible domain list (no collapsing needed)
+-   Shows up to 10 domains sorted by tab count
+-   Individual progress bars for each domain using existing color scheme
+-   Compact display with domain name and "current/limit" format
 
 ### 3. Domain Tracking Service
 

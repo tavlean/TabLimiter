@@ -5,6 +5,27 @@ const browserApi =
     typeof browser !== "undefined" ? browser : typeof chrome !== "undefined" ? chrome : null;
 const browserRef = browserApi; // Keep old variable name compatibility
 
+// Helper function to get options from storage
+const getOptionsFromStorage = () => {
+    return new Promise((resolve) => {
+        browserRef.storage.sync.get(
+            [
+                "maxTotal",
+                "maxWindow",
+                "maxDomain",
+                "exceedTabNewWindow",
+                "displayAlert",
+                "countPinnedTabs",
+                "displayBadge",
+                "alertMessage",
+            ],
+            (options) => {
+                resolve(options);
+            }
+        );
+    });
+};
+
 // ---------------------------------------------------------------------------
 // Helpers used also by background script (kept here unchanged in spirit)
 
@@ -39,6 +60,11 @@ const extractDomainFromUrl = (url) => {
         // Handle file:// URLs
         if (url.startsWith("file://")) {
             return "file";
+        }
+
+        // Handle localhost without protocol
+        if (url.startsWith("localhost")) {
+            return "localhost";
         }
 
         // Parse the URL
@@ -76,16 +102,15 @@ const extractDomainFromUrl = (url) => {
 
 const getDomainCounts = async (options) => {
     try {
-        const tabs = await tabQuery(options);
-        const domainCounts = new Map();
-
-        tabs.forEach((tab) => {
-            const domain = extractDomainFromUrl(tab.url);
-            const currentCount = domainCounts.get(domain) || 0;
-            domainCounts.set(domain, currentCount + 1);
+        // Use background script for tab queries to avoid permission issues
+        const domainCountsArray = await new Promise((resolve) => {
+            browserRef.runtime.sendMessage({ action: "getDomainCounts", options }, (response) => {
+                resolve(response);
+            });
         });
 
-        return domainCounts;
+        // Convert array back to Map
+        return new Map(domainCountsArray);
     } catch (error) {
         console.error("Error getting domain counts:", error);
         return new Map();
@@ -119,38 +144,68 @@ const getDomainInfo = async (domain, options) => {
     }
 };
 
-const getCurrentDomain = async () => {
+// Populate and update the domain list display
+const updateDomainList = async (options) => {
     try {
-        const [activeTab] = await new Promise((resolve) =>
-            browserRef.tabs.query({ active: true, currentWindow: true }, resolve)
-        );
+        const domainListContent = document.getElementById("domainListContent");
+        if (!domainListContent) return;
 
-        if (!activeTab) {
-            return null;
+        // Get all domains with their tab counts
+        const domains = await getTopDomains(options, 10); // Show up to 10 domains
+
+        // Clear existing content
+        domainListContent.innerHTML = "";
+
+        if (domains.length === 0) {
+            domainListContent.innerHTML = '<div class="domain-list-empty">No open domains</div>';
+            return;
         }
 
-        return extractDomainFromUrl(activeTab.url);
+        // Create domain items
+        domains.forEach((domainInfo) => {
+            const domainItem = document.createElement("div");
+            domainItem.className = "domain-item";
+
+            // Format domain name for display
+            let displayName = domainInfo.domain;
+            if (domainInfo.domain === "system") {
+                displayName = "System";
+            } else if (domainInfo.domain === "localhost") {
+                displayName = "Localhost";
+            } else if (domainInfo.domain === "data") {
+                displayName = "Data URL";
+            } else if (domainInfo.domain === "file") {
+                displayName = "Local File";
+            } else if (domainInfo.domain === "unknown") {
+                displayName = "Unknown";
+            } else {
+                // Truncate long domain names
+                displayName =
+                    domainInfo.domain.length > 20
+                        ? domainInfo.domain.substring(0, 17) + "..."
+                        : domainInfo.domain;
+            }
+
+            domainItem.innerHTML = `
+                <div class="domain-item-header">
+                    <span class="domain-name" title="${domainInfo.domain}">${displayName}</span>
+                    <span class="domain-counts">${domainInfo.tabCount} / ${domainInfo.limit}</span>
+                </div>
+                <div class="domain-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${domainInfo.percentage}%"></div>
+                    </div>
+                </div>
+            `;
+
+            // Apply color coding to progress bar
+            const progressFill = domainItem.querySelector(".progress-fill");
+            updateProgressBarColor(progressFill, domainInfo.percentage);
+
+            domainListContent.appendChild(domainItem);
+        });
     } catch (error) {
-        console.error("Error getting current domain:", error);
-        return null;
-    }
-};
-
-const getCurrentDomainInfo = async (options) => {
-    try {
-        const [activeTab] = await new Promise((resolve) =>
-            browserRef.tabs.query({ active: true, currentWindow: true }, resolve)
-        );
-
-        if (!activeTab) {
-            return null;
-        }
-
-        const domain = extractDomainFromUrl(activeTab.url);
-        return await getDomainInfo(domain, options);
-    } catch (error) {
-        console.error("Error getting current domain info:", error);
-        return null;
+        console.error("Error updating domain list:", error);
     }
 };
 
@@ -192,13 +247,7 @@ const updateBadge = (options) => {
 // Domain limit storage helper functions
 const getDomainLimit = async (domain = null) => {
     try {
-        const options = await new Promise((resolve) => {
-            browserRef.storage.sync.get("defaultOptions", (defaults) => {
-                browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
-                    resolve(opts);
-                });
-            });
-        });
+        const options = await getOptionsFromStorage();
         // For now, return the global domain limit
         // Future enhancement: support per-domain limits from options.domainLimits[domain]
         return options.maxDomain || 10;
@@ -225,16 +274,10 @@ const setDomainLimit = async (limit) => {
         });
 
         // Update badge and tab counts after changing domain limit
-        const options = await new Promise((resolve) => {
-            browserRef.storage.sync.get("defaultOptions", (defaults) => {
-                browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
-                    resolve(opts);
-                });
-            });
-        });
+        const options = await getOptionsFromStorage();
         updateBadge(options);
         updateTabCounts();
-        await updateDomainProgress(options);
+        await updateDomainList(options);
     } catch (error) {
         console.error("Error setting domain limit:", error);
         throw error;
@@ -243,13 +286,7 @@ const setDomainLimit = async (limit) => {
 
 const isDomainLimitExceeded = async (domain) => {
     try {
-        const options = await new Promise((resolve) => {
-            browserRef.storage.sync.get("defaultOptions", (defaults) => {
-                browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
-                    resolve(opts);
-                });
-            });
-        });
+        const options = await getOptionsFromStorage();
         const domainInfo = await getDomainInfo(domain, options);
         return domainInfo.tabCount >= domainInfo.limit;
     } catch (error) {
@@ -284,117 +321,11 @@ const updateProgressBarColor = (progressEl, percentage) => {
     }
 };
 
-// Update domain progress bar and display current domain usage
-const updateDomainProgress = async (options) => {
-    try {
-        // Get current domain information
-        const currentDomainInfo = await getCurrentDomainInfo(options);
-
-        if (currentDomainInfo) {
-            // Get DOM elements
-            const domainOpenEl = document.getElementById("domainOpenCount");
-            const domainLeftEl = document.getElementById("domainLeftCount");
-            const domainProgressEl = document.getElementById("domainProgressFill");
-            const domainNameEl = document.getElementById("currentDomainName");
-
-            // Update open tab count
-            if (domainOpenEl) {
-                domainOpenEl.textContent = currentDomainInfo.tabCount;
-            }
-
-            // Update remaining tab count
-            if (domainLeftEl) {
-                domainLeftEl.textContent = currentDomainInfo.remaining;
-            }
-
-            // Update progress bar width and color
-            if (domainProgressEl) {
-                domainProgressEl.style.width = `${currentDomainInfo.percentage}%`;
-                updateProgressBarColor(domainProgressEl, currentDomainInfo.percentage);
-            }
-
-            // Update domain name display with improved formatting
-            if (domainNameEl) {
-                const domain = currentDomainInfo.domain;
-                let displayName = domain;
-
-                // Handle special domain cases with better display names
-                if (domain === "system") {
-                    displayName = "System";
-                } else if (domain === "localhost") {
-                    displayName = "Localhost";
-                } else if (domain === "data") {
-                    displayName = "Data URL";
-                } else if (domain === "file") {
-                    displayName = "Local File";
-                } else if (domain === "unknown") {
-                    displayName = "Unknown";
-                } else {
-                    // Truncate long domain names for better display
-                    displayName = domain.length > 25 ? domain.substring(0, 22) + "..." : domain;
-                }
-
-                domainNameEl.textContent = displayName;
-                domainNameEl.title = domain; // Full domain in tooltip
-
-                // Add CSS class for styling special domains
-                domainNameEl.className = "domain-name";
-                if (["system", "localhost", "data", "file", "unknown"].includes(domain)) {
-                    domainNameEl.classList.add("special-domain");
-                }
-            }
-        } else {
-            // Handle case when no active tab or domain info unavailable
-            const domainOpenEl = document.getElementById("domainOpenCount");
-            const domainLeftEl = document.getElementById("domainLeftCount");
-            const domainProgressEl = document.getElementById("domainProgressFill");
-            const domainNameEl = document.getElementById("currentDomainName");
-
-            if (domainOpenEl) domainOpenEl.textContent = "0";
-            if (domainLeftEl) domainLeftEl.textContent = options.maxDomain || 10;
-            if (domainProgressEl) {
-                domainProgressEl.style.width = "0%";
-                updateProgressBarColor(domainProgressEl, 0);
-            }
-            if (domainNameEl) {
-                domainNameEl.textContent = "—";
-                domainNameEl.title = "";
-                domainNameEl.className = "domain-name";
-            }
-        }
-    } catch (error) {
-        console.error("Error updating domain progress:", error);
-        // Fallback to safe defaults on error
-        const domainOpenEl = document.getElementById("domainOpenCount");
-        const domainLeftEl = document.getElementById("domainLeftCount");
-        const domainProgressEl = document.getElementById("domainProgressFill");
-        const domainNameEl = document.getElementById("currentDomainName");
-
-        if (domainOpenEl) domainOpenEl.textContent = "0";
-        if (domainLeftEl) domainLeftEl.textContent = options.maxDomain || 10;
-        if (domainProgressEl) {
-            domainProgressEl.style.width = "0%";
-            updateProgressBarColor(domainProgressEl, 0);
-        }
-        if (domainNameEl) {
-            domainNameEl.textContent = "—";
-            domainNameEl.title = "";
-            domainNameEl.className = "domain-name";
-        }
-    }
-};
-
 // Update tab count displays
 const updateTabCounts = async () => {
     try {
         // Get current options
-        const options = await new Promise((resolve) => {
-            browserRef.storage.sync.get("defaultOptions", (defaults) => {
-                browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
-                    resolve(opts);
-                });
-            });
-        });
+        const options = await getOptionsFromStorage();
 
         // Get global tab count
         const globalTabs = await tabQuery(options);
@@ -453,8 +384,8 @@ const updateTabCounts = async () => {
             windowBadgeEl.textContent = windowCount;
         }
 
-        // Update domain progress using the dedicated function
-        await updateDomainProgress(options);
+        // Update domain list
+        await updateDomainList(options);
     } catch (error) {
         console.error("Error updating tab counts:", error);
     }
@@ -552,15 +483,25 @@ const restoreOptions = () => {
         $inputs = document.querySelectorAll('input[type="checkbox"], input[type="number"]');
     }
 
-    browserRef.storage.sync.get("defaultOptions", (defaults) => {
-        browserRef.storage.sync.get(defaults.defaultOptions, (options) => {
+    browserRef.storage.sync.get(
+        [
+            "maxTotal",
+            "maxWindow",
+            "maxDomain",
+            "exceedTabNewWindow",
+            "displayAlert",
+            "countPinnedTabs",
+            "displayBadge",
+            "alertMessage",
+        ],
+        (options) => {
             for (let i = 0; i < $inputs.length; i++) {
                 const input = $inputs[i];
                 const valueType = input.type === "checkbox" ? "checked" : "value";
                 input[valueType] = options[input.id];
             }
-        });
-    });
+        }
+    );
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -576,47 +517,45 @@ document.addEventListener("DOMContentLoaded", () => {
         settingsToggle.addEventListener("click", toggleView);
     }
 
-    // Listen for tab activation changes to update domain display
-    if (browserRef.tabs && browserRef.tabs.onActivated) {
-        browserRef.tabs.onActivated.addListener(async () => {
-            try {
-                // Get current options
-                const options = await new Promise((resolve) => {
-                    browserRef.storage.sync.get("defaultOptions", (defaults) => {
-                        browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
-                            resolve(opts);
-                        });
-                    });
-                });
-
-                // Update domain progress when active tab changes
-                await updateDomainProgress(options);
-            } catch (error) {
-                console.error("Error updating domain progress on tab activation:", error);
-            }
+    // Listen for tab changes to update domain list
+    if (browserRef.tabs && browserRef.tabs.onCreated) {
+        browserRef.tabs.onCreated.addListener(async () => {
+            setTimeout(async () => {
+                try {
+                    const options = await getOptionsFromStorage();
+                    await updateDomainList(options);
+                } catch (error) {
+                    console.error("Error updating domain list on tab creation:", error);
+                }
+            }, 100);
         });
     }
 
-    // Listen for tab updates (URL changes) to update domain display
-    if (browserRef.tabs && browserRef.tabs.onUpdated) {
-        browserRef.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-            // Only update if the URL changed and it's the active tab
-            if (changeInfo.url && tab.active) {
+    if (browserRef.tabs && browserRef.tabs.onRemoved) {
+        browserRef.tabs.onRemoved.addListener(async () => {
+            setTimeout(async () => {
                 try {
-                    // Get current options
-                    const options = await new Promise((resolve) => {
-                        browserRef.storage.sync.get("defaultOptions", (defaults) => {
-                            browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
-                                resolve(opts);
-                            });
-                        });
-                    });
-
-                    // Update domain progress when active tab URL changes
-                    await updateDomainProgress(options);
+                    const options = await getOptionsFromStorage();
+                    await updateDomainList(options);
                 } catch (error) {
-                    console.error("Error updating domain progress on tab update:", error);
+                    console.error("Error updating domain list on tab removal:", error);
                 }
+            }, 100);
+        });
+    }
+
+    if (browserRef.tabs && browserRef.tabs.onUpdated) {
+        browserRef.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
+            // Only update if the URL changed (domain might have changed)
+            if (changeInfo.url) {
+                setTimeout(async () => {
+                    try {
+                        const options = await getOptionsFromStorage();
+                        await updateDomainList(options);
+                    } catch (error) {
+                        console.error("Error updating domain list on tab update:", error);
+                    }
+                }, 100);
             }
         });
     }
@@ -687,23 +626,14 @@ document.addEventListener("DOMContentLoaded", () => {
             // Update tab counts when stepper buttons are clicked
             updateTabCounts();
 
-            // If this is the domain stepper, also update domain progress immediately
+            // If this is the domain stepper, also update domain list immediately
             if (inputId === "maxDomain") {
                 setTimeout(async () => {
                     try {
-                        const options = await new Promise((resolve) => {
-                            browserRef.storage.sync.get("defaultOptions", (defaults) => {
-                                browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
-                                    resolve(opts);
-                                });
-                            });
-                        });
-                        await updateDomainProgress(options);
+                        const options = await getOptionsFromStorage();
+                        await updateDomainList(options);
                     } catch (error) {
-                        console.error(
-                            "Error updating domain progress after stepper change:",
-                            error
-                        );
+                        console.error("Error updating domain list after stepper change:", error);
                     }
                 }, 100); // Small delay to ensure storage is updated
             }

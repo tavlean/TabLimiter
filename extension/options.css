@@ -609,3 +609,85 @@ body {
 .progress-fill.red {
     background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%); /* red-500 to red-600 */
 }
+/* Domain List Styles */
+.domain-list {
+    margin-top: 16px;
+}
+
+.domain-list-header {
+    margin-bottom: 8px;
+}
+
+.domain-list-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.domain-list-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.domain-item {
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    padding: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.domain-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.domain-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+    min-width: 0; /* Allow text truncation */
+}
+
+.domain-counts {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.domain-progress {
+    width: 100%;
+}
+
+.domain-progress .progress-bar {
+    height: 4px;
+    background: var(--bg-quaternary);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.domain-progress .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.domain-list-empty {
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    padding: 16px;
+    font-style: italic;
+}
+
+/* Special domain styling */
+.domain-name.special-domain {
+    color: var(--text-secondary);
+    font-style: italic;
+}

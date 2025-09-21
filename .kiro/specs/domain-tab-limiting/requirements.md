@@ -19,29 +19,29 @@ This feature extends the existing Tab Limiter extension to include domain-based 
 
 ### Requirement 2
 
-**User Story:** As a user, I want to see the current tab count for the active tab's domain with a visual progress bar, so that I can become aware of my tab-opening behavior and make conscious decisions about opening more tabs from potentially distracting sites.
+**User Story:** As a user, I want to see a list of all domains with their current tab counts and visual progress bars, so that I can become aware of my tab-opening behavior across all domains and make conscious decisions about opening more tabs from potentially distracting sites.
 
 #### Acceptance Criteria
 
-1. WHEN the user opens the extension popup THEN the system SHALL display the domain of the currently active tab
-2. WHEN the user opens the extension popup THEN the system SHALL show the number of open tabs for the current domain
-3. WHEN the user opens the extension popup THEN the system SHALL show the number of remaining tabs allowed for the current domain
-4. WHEN the user opens the extension popup THEN the system SHALL display a progress bar showing the percentage of domain limit used
-5. WHEN the domain usage changes THEN the system SHALL update the progress bar color based on usage percentage (following the existing color scheme)
+1. WHEN the user opens the extension popup THEN the system SHALL display a list of all domains that have open tabs
+2. WHEN the user opens the extension popup THEN the system SHALL show the number of open tabs for each domain
+3. WHEN the user opens the extension popup THEN the system SHALL show the limit and remaining tabs for each domain
+4. WHEN the user opens the extension popup THEN the system SHALL display a progress bar for each domain showing the percentage of domain limit used
+5. WHEN the domain usage changes THEN the system SHALL update the progress bar colors based on usage percentage (following the existing color scheme)
 
 ### Requirement 3
 
-**User Story:** As a user, I want to see a collapsible list of the top domains with the most open tabs, so that I can identify which websites are contributing most to my cognitive overload and take action to reduce distractions.
+**User Story:** As a user, I want the domain list to be sorted by tab count and show clear visual indicators, so that I can quickly identify which websites are contributing most to my cognitive overload and take action to reduce distractions.
 
 #### Acceptance Criteria
 
-1. WHEN the user clicks a down chevron icon below the domain card THEN the system SHALL expand to show a list of domains
-2. WHEN the domain list is expanded THEN the system SHALL display the top 5 domains with the most open tabs
-3. WHEN the domain list is expanded THEN the system SHALL sort domains in descending order by tab count
-4. WHEN the domain list is expanded THEN the system SHALL show a progress bar for each domain indicating usage against the domain limit
-5. WHEN the domain list is expanded THEN the system SHALL display the domain name, open tab count, and remaining tab count for each domain
-6. WHEN the user clicks the chevron icon again THEN the system SHALL collapse the domain list
-7. WHEN there are no open tabs THEN the system SHALL show an appropriate empty state message
+1. WHEN the domain list is displayed THEN the system SHALL sort domains in descending order by tab count (most tabs first)
+2. WHEN the domain list is displayed THEN the system SHALL show up to 10 domains with open tabs
+3. WHEN the domain list is displayed THEN the system SHALL show a progress bar for each domain indicating usage against the domain limit
+4. WHEN the domain list is displayed THEN the system SHALL display the domain name, open tab count, and limit for each domain
+5. WHEN there are no domains with multiple tabs THEN the system SHALL show an appropriate empty state message
+6. WHEN domain names are too long THEN the system SHALL truncate them with ellipsis and show full name in tooltip
+7. WHEN domains are special (system, localhost, etc.) THEN the system SHALL display user-friendly names
 
 ### Requirement 4
 
@@ -69,12 +69,12 @@ This feature extends the existing Tab Limiter extension to include domain-based 
 
 ### Requirement 6
 
-**User Story:** As a user, I want the domain tab counts to update in real-time, so that I always see accurate information about my current tab usage.
+**User Story:** As a user, I want the domain list to update in real-time, so that I always see accurate information about my current tab usage across all domains.
 
 #### Acceptance Criteria
 
-1. WHEN tabs are opened or closed THEN the system SHALL immediately update domain counts and progress bars
-2. WHEN the user switches between tabs THEN the system SHALL update the displayed domain information for the new active tab
-3. WHEN the user navigates to a different domain in an existing tab THEN the system SHALL update the domain counts accordingly
-4. WHEN the extension popup is open THEN the system SHALL refresh domain information every second to maintain accuracy
-5. WHEN domain counts change THEN the system SHALL update progress bar colors to reflect the new usage levels
+1. WHEN tabs are opened or closed THEN the system SHALL immediately update the domain list with new counts and progress bars
+2. WHEN the user navigates to a different domain in an existing tab THEN the system SHALL update the domain counts accordingly
+3. WHEN the extension popup is open THEN the system SHALL refresh domain information every second to maintain accuracy
+4. WHEN domain counts change THEN the system SHALL update progress bar colors to reflect the new usage levels
+5. WHEN the domain limit is changed THEN the system SHALL immediately update all domain progress bars and remaining counts

@@ -40,6 +40,11 @@ class DomainTracker {
                 return "file";
             }
 
+            // Handle localhost without protocol
+            if (url.startsWith("localhost")) {
+                return "localhost";
+            }
+
             // Parse the URL
             const urlObj = new URL(url);
             let hostname = urlObj.hostname;
@@ -270,15 +275,48 @@ const detectTooManyTabsInTotal = (options) =>
         });
     });
 
+// only resolves if there are too many tabs in a domain
+const detectTooManyTabsInDomain = async (tab, options) => {
+    try {
+        const domain = domainTracker.extractDomainFromUrl(tab.url);
+        console.log(`Checking domain limit for ${domain}, tab: ${tab.url}`);
+
+        // Get current domain info
+        const domainInfo = await domainTracker.getDomainInfo(domain, options);
+        console.log(
+            `Domain ${domain} has ${domainInfo.tabCount} tabs, limit is ${domainInfo.limit}`
+        );
+
+        // Check if this domain has reached its limit
+        if (domainInfo.tabCount >= domainInfo.limit) {
+            console.log(`Domain limit exceeded for ${domain}`);
+            return "domain";
+        }
+    } catch (error) {
+        console.error("Error checking domain limit:", error);
+    }
+    return null;
+};
+
 // get user options from storage
 const getOptions = () =>
     new Promise((res) => {
-        chrome.storage.sync.get("defaultOptions", (defaults) => {
-            chrome.storage.sync.get(defaults.defaultOptions, (options) => {
+        chrome.storage.sync.get(
+            [
+                "maxTotal",
+                "maxWindow",
+                "maxDomain",
+                "exceedTabNewWindow",
+                "displayAlert",
+                "countPinnedTabs",
+                "displayBadge",
+                "alertMessage",
+            ],
+            (options) => {
                 // console.log(options);
                 res(options);
-            });
-        });
+            }
+        );
     });
 
 // Domain limit storage helper functions
@@ -331,6 +369,7 @@ const displayAlert = (options, place, movedToOtherWindow = false) =>
             switch (p1) {
                 case "place":
                 case "which": // backwards compatibility
+                    if (place === "domain") return "per domain";
                     return place === "window" ? "one window" : "total";
 
                 case "maxPlace":
@@ -437,44 +476,94 @@ const handleExceedTabs = async (tab, options, place) => {
 };
 
 const handleTabCreated = async (tab) => {
-    return getOptions().then((options) => {
-        return Promise.race([detectTooManyTabsInWindow(options), detectTooManyTabsInTotal(options)])
-            .then(() => {
-                console.log("Tab creation detected, checking limits...");
+    return getOptions().then(async (options) => {
+        try {
+            console.log("Tab creation detected, checking limits...");
 
-                // For Manifest V3, we simplify the logic since service workers are ephemeral
-                // We'll just handle the immediate tab creation without complex state tracking
-                setTimeout(() => {
-                    // Recheck tab limits after a short delay to handle race conditions
-                    Promise.race([
-                        detectTooManyTabsInWindow(options),
-                        detectTooManyTabsInTotal(options),
-                    ]).then((newPlace) => {
-                        if (newPlace) {
-                            handleExceedTabs(tab, options, newPlace);
+            // Check domain limit first
+            const domainLimitExceeded = await detectTooManyTabsInDomain(tab, options);
+            if (domainLimitExceeded) {
+                console.log("Domain limit exceeded for tab:", tab.url);
+                chrome.tabs.remove(tab.id);
+                displayAlert(options, "domain", false);
+                updateBadge(options);
+                return;
+            }
+
+            // Then check window and total limits
+            return Promise.race([
+                detectTooManyTabsInWindow(options),
+                detectTooManyTabsInTotal(options),
+            ])
+                .then(() => {
+                    // For Manifest V3, we simplify the logic since service workers are ephemeral
+                    // We'll just handle the immediate tab creation without complex state tracking
+                    setTimeout(async () => {
+                        // Recheck all limits after a short delay to handle race conditions
+                        const domainCheck = await detectTooManyTabsInDomain(tab, options);
+                        if (domainCheck) {
+                            handleExceedTabs(tab, options, domainCheck);
                             updateBadge(options);
+                            return;
                         }
-                    });
-                }, 100);
-            })
-            .catch((err) => console.error("Error handling tab creation:", err));
+
+                        Promise.race([
+                            detectTooManyTabsInWindow(options),
+                            detectTooManyTabsInTotal(options),
+                        ]).then((newPlace) => {
+                            if (newPlace) {
+                                handleExceedTabs(tab, options, newPlace);
+                                updateBadge(options);
+                            }
+                        });
+                    }, 100);
+                })
+                .catch((err) => console.error("Error handling tab creation:", err));
+        } catch (error) {
+            console.error("Error in handleTabCreated:", error);
+        }
     });
 };
 
 // Initialize extension
 const init = () => {
-    chrome.storage.sync.set({
-        defaultOptions: {
-            maxTotal: 50,
-            maxWindow: 20,
-            maxDomain: 10,
-            exceedTabNewWindow: false,
-            displayAlert: true,
-            countPinnedTabs: false,
-            displayBadge: false,
-            alertMessage: "Limit is {maxPlace} tabs in {place}",
-        },
-    });
+    // Set default values only if they don't exist
+    chrome.storage.sync.get(
+        [
+            "maxTotal",
+            "maxWindow",
+            "maxDomain",
+            "exceedTabNewWindow",
+            "displayAlert",
+            "countPinnedTabs",
+            "displayBadge",
+            "alertMessage",
+        ],
+        (result) => {
+            const defaults = {
+                maxTotal: 50,
+                maxWindow: 20,
+                maxDomain: 10,
+                exceedTabNewWindow: false,
+                displayAlert: true,
+                countPinnedTabs: false,
+                displayBadge: false,
+                alertMessage: "Limit is {maxPlace} tabs in {place}",
+            };
+
+            // Only set values that don't exist
+            const toSet = {};
+            for (const [key, defaultValue] of Object.entries(defaults)) {
+                if (result[key] === undefined) {
+                    toSet[key] = defaultValue;
+                }
+            }
+
+            if (Object.keys(toSet).length > 0) {
+                chrome.storage.sync.set(toSet);
+            }
+        }
+    );
 
     // Request notification permission if needed
     chrome.permissions.contains(
@@ -513,9 +602,15 @@ chrome.windows.onFocusChanged.addListener(() => {
 });
 
 // Handle messages from options page
-chrome.runtime.onMessage.addListener((request) => {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "updateBadge") {
         updateBadge(request.options);
+    } else if (request.action === "getDomainCounts") {
+        domainTracker.getDomainCounts(request.options).then((domainCounts) => {
+            // Convert Map to array for serialization
+            sendResponse(Array.from(domainCounts.entries()));
+        });
+        return true; // Keep message channel open for async response
     }
 });
 

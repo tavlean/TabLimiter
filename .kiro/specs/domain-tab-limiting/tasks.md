@@ -53,57 +53,31 @@
     -   Update restoreOptions to load domain limit from storage
     -   _Requirements: 1.1, 1.2_
 
--   [x] 8. Implement domain progress bar updates
+-   [x] 8. Implement domain list display
 
-    -   Add updateDomainProgress function to calculate and display current domain usage
-    -   Integrate domain progress updates with existing updateTabCounts function
-    -   Apply existing color scheme to domain progress bar based on usage percentage
-    -   Update domain display when active tab changes
-    -   _Requirements: 2.2, 2.3, 2.4, 2.5, 6.2_
-
--   [x] 9. Add domain name display functionality
-
-    -   Implement getCurrentDomain function to extract domain from active tab
-    -   Add domain name display updates to tab switching logic
-    -   Handle edge cases for special URLs (chrome://, extensions, localhost)
-    -   Truncate long domain names with ellipsis
-    -   _Requirements: 2.1, 6.3_
-
--   [ ] 10. Create expandable domain list HTML structure
-
-    -   Add domain list container below Domain card with chevron toggle button
-    -   Create domain list items structure with progress bars and counts
-    -   Add hidden class for initial collapsed state
-    -   Include empty state message for when no tabs are open
-    -   _Requirements: 3.1, 3.7_
-
--   [ ] 11. Implement domain list CSS styling and animations
-
-    -   Style domain list container and individual domain items
-    -   Add smooth expand/collapse animations (300ms ease)
-    -   Style chevron icon with rotation animation
-    -   Add hover states for domain list items
-    -   Ensure consistent spacing and typography
-    -   _Requirements: 3.1, 3.6_
-
--   [ ] 12. Add domain list toggle functionality
-
-    -   Implement click handler for chevron button to expand/collapse domain list
-    -   Add ARIA attributes for accessibility (aria-expanded)
-    -   Rotate chevron icon when expanded/collapsed
-    -   Save expansion state to storage for persistence
-    -   _Requirements: 3.1, 3.6_
-
--   [ ] 13. Implement domain list population and updates
-
-    -   Add populateDomainList function to fetch and display top 5 domains
-    -   Create individual domain list items with progress bars and counts
+    -   Add updateDomainList function to populate and display all domains with tab counts
+    -   Create domain list HTML structure with header and content areas
+    -   Apply existing color scheme to individual domain progress bars based on usage percentage
     -   Sort domains by tab count in descending order
-    -   Update domain list when tabs are opened/closed
-    -   Handle empty state when no domains have multiple tabs
-    -   _Requirements: 3.2, 3.3, 3.4, 3.5, 3.7_
+    -   _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3_
 
--   [ ] 14. Integrate domain tracking with background script
+-   [x] 9. Add domain list formatting and display logic
+
+    -   Handle special domain names (system, localhost, etc.) with user-friendly display names
+    -   Truncate long domain names with ellipsis and show full name in tooltip
+    -   Display domain counts in "current/limit" format
+    -   Show empty state message when no domains have multiple tabs
+    -   _Requirements: 3.4, 3.5, 3.6, 3.7_
+
+-   [x] 10. Update domain list on tab events
+
+    -   Add event listeners for tab creation, removal, and URL changes
+    -   Update domain list immediately when tabs are opened/closed
+    -   Handle domain changes when user navigates to different domains in existing tabs
+    -   Add debouncing to prevent excessive updates
+    -   _Requirements: 6.1, 6.2, 6.3_
+
+-   [x] 11. Integrate domain tracking with background script
 
     -   Add domain tracking initialization to background.js
     -   Update existing tab event listeners to include domain count updates
@@ -111,7 +85,7 @@
     -   Add domain tracking to tab creation, removal, and update events
     -   _Requirements: 6.1, 6.4_
 
--   [ ] 15. Implement domain limit enforcement
+-   [x] 12. Implement domain limit enforcement
 
     -   Add domain limit checking to handleTabCreated function
     -   Create detectTooManyTabsInDomain function similar to existing limit checks
@@ -119,7 +93,7 @@
     -   Ensure domain limits work alongside window and total limits
     -   _Requirements: 4.1, 4.2, 4.5_
 
--   [ ] 16. Add domain-specific alert notifications
+-   [x] 13. Add domain-specific alert notifications
 
     -   Extend displayAlert function to handle domain limit messages
     -   Add domain name and limit information to alert messages
@@ -127,7 +101,7 @@
     -   Test alert display when domain limits are exceeded
     -   _Requirements: 4.3, 4.4_
 
--   [ ] 17. Update badge calculation for domain limits
+-   [ ] 14. Update badge calculation for domain limits
 
     -   Modify updateBadge function to consider domain limits alongside window/total limits
     -   Calculate minimum remaining tabs across all limit types (window, total, domain)
@@ -135,7 +109,7 @@
     -   Test badge updates when domain limits are most restrictive
     -   _Requirements: 5.3_
 
--   [ ] 18. Implement pinned tabs handling for domain counts
+-   [x] 15. Implement pinned tabs handling for domain counts
 
     -   Update domain counting logic to respect countPinnedTabs setting
     -   Exclude pinned tabs from domain counts when setting is disabled
@@ -143,10 +117,10 @@
     -   Test domain limits with various pinned tab configurations
     -   _Requirements: 5.1, 5.2_
 
--   [ ] 19. Add real-time domain updates
+-   [x] 16. Add real-time domain updates
 
     -   Implement periodic domain count updates (1-second interval)
-    -   Update domain display when switching between tabs
+    -   Update domain list when tabs are opened/closed/changed
     -   Refresh domain list when tab counts change
     -   Optimize update frequency to balance accuracy and performance
     -   _Requirements: 6.1, 6.2, 6.4, 6.5_
