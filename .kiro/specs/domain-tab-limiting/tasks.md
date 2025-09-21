@@ -20,7 +20,7 @@
     -   Create helper functions for domain limit storage operations
     -   _Requirements: 1.1, 1.4_
 
--   [ ] 4. Create DomainTracker service class
+-   [x] 4. Create DomainTracker service class
 
     -   Implement DomainTracker class with methods for counting tabs by domain
     -   Add getCurrentDomainInfo method to get active tab's domain information

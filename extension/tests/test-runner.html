@@ -65,8 +65,9 @@
 
         <script src="domain-utils.test.js"></script>
         <script>
-            function runTests() {
+            async function runTests() {
                 const resultsDiv = document.getElementById("results");
+                resultsDiv.innerHTML = "Running tests...";
 
                 // Capture console output
                 const originalLog = console.log;
@@ -78,8 +79,8 @@
                 };
 
                 try {
-                    // Run the tests
-                    const success = runAllTests();
+                    // Run the tests (now async)
+                    const success = await runAllTests();
 
                     // Restore console.log
                     console.log = originalLog;
