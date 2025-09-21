@@ -217,6 +217,7 @@ const setDomainLimit = async (limit) => {
         });
         updateBadge(options);
         updateTabCounts();
+        await updateDomainProgress(options);
     } catch (error) {
         console.error("Error setting domain limit:", error);
         throw error;
@@ -263,6 +264,84 @@ const updateProgressBarColor = (progressEl, percentage) => {
         progressEl.classList.add("orange");
     } else {
         progressEl.classList.add("red");
+    }
+};
+
+// Update domain progress bar and display current domain usage
+const updateDomainProgress = async (options) => {
+    try {
+        // Get current domain information
+        const currentDomainInfo = await getCurrentDomainInfo(options);
+
+        if (currentDomainInfo) {
+            // Get DOM elements
+            const domainOpenEl = document.getElementById("domainOpenCount");
+            const domainLeftEl = document.getElementById("domainLeftCount");
+            const domainProgressEl = document.getElementById("domainProgressFill");
+            const domainNameEl = document.getElementById("currentDomainName");
+
+            // Update open tab count
+            if (domainOpenEl) {
+                domainOpenEl.textContent = currentDomainInfo.tabCount;
+            }
+
+            // Update remaining tab count
+            if (domainLeftEl) {
+                domainLeftEl.textContent = currentDomainInfo.remaining;
+            }
+
+            // Update progress bar width and color
+            if (domainProgressEl) {
+                domainProgressEl.style.width = `${currentDomainInfo.percentage}%`;
+                updateProgressBarColor(domainProgressEl, currentDomainInfo.percentage);
+            }
+
+            // Update domain name display
+            if (domainNameEl) {
+                // Truncate long domain names for better display
+                const displayName =
+                    currentDomainInfo.domain.length > 25
+                        ? currentDomainInfo.domain.substring(0, 22) + "..."
+                        : currentDomainInfo.domain;
+                domainNameEl.textContent = displayName;
+                domainNameEl.title = currentDomainInfo.domain; // Full domain in tooltip
+            }
+        } else {
+            // Handle case when no active tab or domain info unavailable
+            const domainOpenEl = document.getElementById("domainOpenCount");
+            const domainLeftEl = document.getElementById("domainLeftCount");
+            const domainProgressEl = document.getElementById("domainProgressFill");
+            const domainNameEl = document.getElementById("currentDomainName");
+
+            if (domainOpenEl) domainOpenEl.textContent = "0";
+            if (domainLeftEl) domainLeftEl.textContent = options.maxDomain || 10;
+            if (domainProgressEl) {
+                domainProgressEl.style.width = "0%";
+                updateProgressBarColor(domainProgressEl, 0);
+            }
+            if (domainNameEl) {
+                domainNameEl.textContent = "—";
+                domainNameEl.title = "";
+            }
+        }
+    } catch (error) {
+        console.error("Error updating domain progress:", error);
+        // Fallback to safe defaults on error
+        const domainOpenEl = document.getElementById("domainOpenCount");
+        const domainLeftEl = document.getElementById("domainLeftCount");
+        const domainProgressEl = document.getElementById("domainProgressFill");
+        const domainNameEl = document.getElementById("currentDomainName");
+
+        if (domainOpenEl) domainOpenEl.textContent = "0";
+        if (domainLeftEl) domainLeftEl.textContent = options.maxDomain || 10;
+        if (domainProgressEl) {
+            domainProgressEl.style.width = "0%";
+            updateProgressBarColor(domainProgressEl, 0);
+        }
+        if (domainNameEl) {
+            domainNameEl.textContent = "—";
+            domainNameEl.title = "";
+        }
     }
 };
 
@@ -335,31 +414,8 @@ const updateTabCounts = async () => {
             windowBadgeEl.textContent = windowCount;
         }
 
-        // Update domain progress and counts
-        const currentDomainInfo = await getCurrentDomainInfo(options);
-        if (currentDomainInfo) {
-            const domainOpenEl = document.getElementById("domainOpenCount");
-            const domainLeftEl = document.getElementById("domainLeftCount");
-            const domainProgressEl = document.getElementById("domainProgressFill");
-            const domainNameEl = document.getElementById("currentDomainName");
-
-            if (domainOpenEl) {
-                domainOpenEl.textContent = currentDomainInfo.tabCount;
-            }
-
-            if (domainLeftEl) {
-                domainLeftEl.textContent = currentDomainInfo.remaining;
-            }
-
-            if (domainProgressEl) {
-                domainProgressEl.style.width = `${currentDomainInfo.percentage}%`;
-                updateProgressBarColor(domainProgressEl, currentDomainInfo.percentage);
-            }
-
-            if (domainNameEl) {
-                domainNameEl.textContent = currentDomainInfo.domain;
-            }
-        }
+        // Update domain progress using the dedicated function
+        await updateDomainProgress(options);
     } catch (error) {
         console.error("Error updating tab counts:", error);
     }
@@ -481,6 +537,51 @@ document.addEventListener("DOMContentLoaded", () => {
         settingsToggle.addEventListener("click", toggleView);
     }
 
+    // Listen for tab activation changes to update domain display
+    if (browserRef.tabs && browserRef.tabs.onActivated) {
+        browserRef.tabs.onActivated.addListener(async () => {
+            try {
+                // Get current options
+                const options = await new Promise((resolve) => {
+                    browserRef.storage.sync.get("defaultOptions", (defaults) => {
+                        browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
+                            resolve(opts);
+                        });
+                    });
+                });
+
+                // Update domain progress when active tab changes
+                await updateDomainProgress(options);
+            } catch (error) {
+                console.error("Error updating domain progress on tab activation:", error);
+            }
+        });
+    }
+
+    // Listen for tab updates (URL changes) to update domain display
+    if (browserRef.tabs && browserRef.tabs.onUpdated) {
+        browserRef.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+            // Only update if the URL changed and it's the active tab
+            if (changeInfo.url && tab.active) {
+                try {
+                    // Get current options
+                    const options = await new Promise((resolve) => {
+                        browserRef.storage.sync.get("defaultOptions", (defaults) => {
+                            browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
+                                resolve(opts);
+                            });
+                        });
+                    });
+
+                    // Update domain progress when active tab URL changes
+                    await updateDomainProgress(options);
+                } catch (error) {
+                    console.error("Error updating domain progress on tab update:", error);
+                }
+            }
+        });
+    }
+
     // Wire up change/keyup events for auto-save
     const onChangeInputs = document.querySelectorAll(
         'input[type="checkbox"], input[type="number"]'
@@ -543,7 +644,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
             input.value = newValue;
             input.dispatchEvent(new Event("change", { bubbles: true }));
-            updateTabCounts(); // Update tab counts when stepper buttons are clicked
+
+            // Update tab counts when stepper buttons are clicked
+            updateTabCounts();
+
+            // If this is the domain stepper, also update domain progress immediately
+            if (inputId === "maxDomain") {
+                setTimeout(async () => {
+                    try {
+                        const options = await new Promise((resolve) => {
+                            browserRef.storage.sync.get("defaultOptions", (defaults) => {
+                                browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
+                                    resolve(opts);
+                                });
+                            });
+                        });
+                        await updateDomainProgress(options);
+                    } catch (error) {
+                        console.error(
+                            "Error updating domain progress after stepper change:",
+                            error
+                        );
+                    }
+                }, 100); // Small delay to ensure storage is updated
+            }
         });
     });
 

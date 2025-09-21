@@ -53,7 +53,7 @@
     -   Update restoreOptions to load domain limit from storage
     -   _Requirements: 1.1, 1.2_
 
--   [ ] 8. Implement domain progress bar updates
+-   [x] 8. Implement domain progress bar updates
 
     -   Add updateDomainProgress function to calculate and display current domain usage
     -   Integrate domain progress updates with existing updateTabCounts function
