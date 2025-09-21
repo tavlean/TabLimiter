@@ -28,7 +28,7 @@
     -   Write unit tests for DomainTracker methods
     -   _Requirements: 2.1, 3.2, 3.3, 6.1_
 
--   [ ] 5. Add Domain card HTML structure
+-   [x] 5. Add Domain card HTML structure
 
     -   Insert new Domain card after "All Windows" card in options.html
     -   Create card header with domain icon and "Domain" title
@@ -37,7 +37,7 @@
     -   Add domain name display element
     -   _Requirements: 1.1, 2.1, 2.2_
 
--   [ ] 6. Implement Domain card CSS styling
+-   [x] 6. Implement Domain card CSS styling
 
     -   Add CSS styles for domain card following existing card pattern
     -   Style domain name display with appropriate typography
@@ -45,7 +45,7 @@
     -   Add hover states and transitions
     -   _Requirements: 2.1, 2.5_
 
--   [ ] 7. Add domain stepper functionality to options.js
+-   [-] 7. Add domain stepper functionality to options.js
 
     -   Wire up domain stepper buttons to increment/decrement domain limit
     -   Add domain limit input validation and bounds checking
