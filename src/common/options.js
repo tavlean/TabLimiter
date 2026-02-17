@@ -146,7 +146,7 @@ const toggleView = () => {
         }
 
         // Change icon to X/close
-        settingsIcon.src = "icons/close.svg";
+        settingsIcon.src = "assets/close.svg";
         settingsIcon.alt = "Close settings";
 
         currentView = "settings";
@@ -163,7 +163,7 @@ const toggleView = () => {
         }
 
         // Change icon back to settings gear
-        settingsIcon.src = "icons/settings.svg";
+        settingsIcon.src = "assets/settings.svg";
         settingsIcon.alt = "Toggle settings";
 
         currentView = "main";

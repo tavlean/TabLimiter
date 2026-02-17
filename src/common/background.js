@@ -95,7 +95,7 @@ const displayAlert = (options, place, movedToOtherWindow = false) =>
         // Use notifications instead of alert() for Manifest V3
         chrome.notifications.create({
             type: "basic",
-            iconUrl: "icons/icon48.png",
+            iconUrl: "assets/icon48.png",
             title: "Tab Limiter",
             message: renderedMessage,
         });
@@ -218,19 +218,25 @@ const init = () => {
         },
     });
 
-    // Request notification permission if needed
-    chrome.permissions.contains(
-        {
-            permissions: ["notifications"],
-        },
-        (result) => {
-            if (!result) {
-                chrome.permissions.request({
-                    permissions: ["notifications"],
-                });
+    // Request notification permission if the API exists in this browser.
+    if (
+        chrome.permissions &&
+        typeof chrome.permissions.contains === "function" &&
+        typeof chrome.permissions.request === "function"
+    ) {
+        chrome.permissions.contains(
+            {
+                permissions: ["notifications"],
+            },
+            (result) => {
+                if (!result) {
+                    chrome.permissions.request({
+                        permissions: ["notifications"],
+                    });
+                }
             }
-        }
-    );
+        );
+    }
 
     console.log("Tab Limiter initialized");
 };
