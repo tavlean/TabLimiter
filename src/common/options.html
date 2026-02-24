@@ -45,7 +45,6 @@
 
         <div id="mainView" class="view-container">
             <div class="cards-container">
-            <!-- Window Card -->
             <div class="card" id="windowCard">
                 <div class="card-header">
                     <img src="assets/window.svg" alt="Window" class="card-icon"/>
@@ -105,7 +104,6 @@
                 </div>
             </div>
 
-            <!-- All Windows Card -->
             <div class="card" id="allWindowsCard">
                 <div class="card-header">
                     <img src="assets/windows.svg" alt="All Windows" class="card-icon"/>
@@ -166,30 +164,9 @@
                 </div>
             </div>
 
-            <!-- Domain Card -->
             <div class="card" id="domainCard">
                 <div class="card-header">
-                    <svg
-                        class="card-icon"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        aria-hidden="true"
-                    >
-                        <path
-                            d="M7.2 5.4a4 4 0 0 1 5.6 0l.8.8a4 4 0 0 1 0 5.6l-1.6 1.6a4 4 0 0 1-5.6 0"
-                            stroke="currentColor"
-                            stroke-width="1.6"
-                            stroke-linecap="round"
-                        />
-                        <path
-                            d="M12.8 14.6a4 4 0 0 1-5.6 0l-.8-.8a4 4 0 0 1 0-5.6l1.6-1.6a4 4 0 0 1 5.6 0"
-                            stroke="currentColor"
-                            stroke-width="1.6"
-                            stroke-linecap="round"
-                        />
-                    </svg>
+               <img src="assets/domain.svg" alt="Window" class="card-icon"/>
                     <h2>Domain</h2>
                 </div>
 
@@ -239,6 +216,21 @@
 
         <div id="settingsView" class="view-container hidden">
             <div class="section">
+                        <label class="toggle-row">
+                <input
+                    id="enableDomainLimit"
+                    type="checkbox"
+                    class="toggle-input checkbox-input"
+                />
+                <span
+                    class="toggle-slider"
+                    aria-hidden="true"
+                ></span>
+                <div class="toggle-text">
+                    <div class="label-title">Limit per Domain</div>
+                    <div class="label-desc">Limit max tabs per domain</div>
+                </div>
+            </label>
                 <label class="toggle-row">
                 <input
                     id="displayBadge"
@@ -303,21 +295,6 @@
                 </div>
             </label>
 
-            <label class="toggle-row">
-                <input
-                    id="enableDomainLimit"
-                    type="checkbox"
-                    class="toggle-input checkbox-input"
-                />
-                <span
-                    class="toggle-slider"
-                    aria-hidden="true"
-                ></span>
-                <div class="toggle-text">
-                    <div class="label-title">Domain Limit</div>
-                    <div class="label-desc">Limit tabs per domain and show top domains</div>
-                </div>
-            </label>
 
         </div>
     </body>
