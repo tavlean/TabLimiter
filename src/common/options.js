@@ -33,6 +33,14 @@ let currentView = "main"; // 'main' or 'settings'
 let tabCountsUpdateTimer = null;
 let tabCountsUpdateInFlight = false;
 let tabCountsUpdatePending = false;
+const COUNT_RELEVANT_OPTION_IDS = new Set([
+    "maxWindow",
+    "maxTotal",
+    "countPinnedTabs",
+    "enableDomainLimit",
+    "maxDomain",
+    "topDomainsCount",
+]);
 
 const getCachedInputs = () => {
     if (!$inputs) {
@@ -63,6 +71,126 @@ const applyOptionsToInputs = (options) => {
 
         input.value = options[input.id];
     }
+
+    syncDomainFeatureVisibility(options);
+};
+
+const normalizeNumber = (value, fallback, min = 1, max = 9999) => {
+    const parsed = parseInt(value, 10);
+    if (Number.isNaN(parsed)) {
+        return fallback;
+    }
+    return Math.min(max, Math.max(min, parsed));
+};
+
+const getCurrentOptions = () =>
+    new Promise((resolve) => {
+        browserRef.storage.sync.get("defaultOptions", (defaults) => {
+            browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
+                resolve(opts);
+            });
+        });
+    });
+
+const getDomainFromUrl = (url) => {
+    if (!url) {
+        return null;
+    }
+
+    try {
+        const parsedUrl = new URL(url);
+
+        if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+            return null;
+        }
+
+        return parsedUrl.hostname.toLowerCase().replace(/^www\./, "");
+    } catch (error) {
+        return null;
+    }
+};
+
+const buildTopDomains = (tabs, maxItems) => {
+    const domainCounts = new Map();
+
+    for (const tab of tabs) {
+        const domain = getDomainFromUrl(tab.url);
+        if (!domain) {
+            continue;
+        }
+
+        domainCounts.set(domain, (domainCounts.get(domain) || 0) + 1);
+    }
+
+    const sortedDomains = Array.from(domainCounts.entries())
+        .sort((a, b) => (b[1] !== a[1] ? b[1] - a[1] : a[0].localeCompare(b[0])))
+        .map(([domain, count]) => ({ domain, count }));
+
+    return {
+        uniqueDomainCount: sortedDomains.length,
+        topDomains: sortedDomains.slice(0, maxItems),
+    };
+};
+
+const renderDomainList = (tabs, options) => {
+    const domainListEl = document.getElementById("domainList");
+    const domainEmptyEl = document.getElementById("domainEmptyState");
+    const domainBadgeEl = document.getElementById("domainCountBadge");
+
+    if (!domainListEl || !domainEmptyEl || !domainBadgeEl) {
+        return;
+    }
+
+    const topDomainsCount = normalizeNumber(options.topDomainsCount, 5, 1, 20);
+    const { uniqueDomainCount, topDomains } = buildTopDomains(tabs, topDomainsCount);
+    domainBadgeEl.textContent = uniqueDomainCount;
+
+    domainListEl.textContent = "";
+
+    if (topDomains.length === 0) {
+        domainEmptyEl.classList.remove("hidden");
+        return;
+    }
+
+    domainEmptyEl.classList.add("hidden");
+
+    const fragment = document.createDocumentFragment();
+    for (const { domain, count } of topDomains) {
+        const item = document.createElement("li");
+        item.className = "domain-item";
+
+        const domainName = document.createElement("span");
+        domainName.className = "domain-name";
+        domainName.textContent = domain;
+        domainName.title = domain;
+
+        const countBadge = document.createElement("span");
+        countBadge.className = "count-badge domain-list-badge";
+        countBadge.textContent = count;
+
+        item.append(domainName, countBadge);
+        fragment.append(item);
+    }
+
+    domainListEl.append(fragment);
+};
+
+const syncDomainFeatureVisibility = (partialOptions = {}) => {
+    const domainCard = document.getElementById("domainCard");
+    const topDomainsCountRow = document.getElementById("topDomainsCountRow");
+    const enabledInput = document.getElementById("enableDomainLimit");
+
+    if (!domainCard || !topDomainsCountRow) {
+        return;
+    }
+
+    const isEnabled =
+        "enableDomainLimit" in partialOptions
+            ? Boolean(partialOptions.enableDomainLimit)
+            : Boolean(enabledInput && enabledInput.checked);
+
+    domainCard.classList.toggle("hidden", !isEnabled);
+    topDomainsCountRow.classList.toggle("hidden", !isEnabled);
 };
 
 const runTabCountsUpdate = async () => {
@@ -121,14 +249,8 @@ const updateProgressBarColor = (progressEl, percentage) => {
 // Update tab count displays
 const updateTabCounts = async () => {
     try {
-        // Get current options
-        const options = await new Promise((resolve) => {
-            browserRef.storage.sync.get("defaultOptions", (defaults) => {
-                browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
-                    resolve(opts);
-                });
-            });
-        });
+        const options = await getCurrentOptions();
+        syncDomainFeatureVisibility(options);
 
         // Get global tab count
         const globalTabs = await tabQuery(options);
@@ -185,6 +307,10 @@ const updateTabCounts = async () => {
 
         if (windowBadgeEl) {
             windowBadgeEl.textContent = windowCount;
+        }
+
+        if (options.enableDomainLimit) {
+            renderDomainList(globalTabs, options);
         }
     } catch (error) {
         console.error("Error updating tab counts:", error);
@@ -269,6 +395,7 @@ const saveOptions = () => {
     }
 
     const options = values;
+    syncDomainFeatureVisibility(options);
 
     browserRef.storage.sync.set(options, () => {
         updateBadge(options);
@@ -296,6 +423,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const settingsToggle = document.getElementById("settingsToggle");
     if (settingsToggle) {
         settingsToggle.addEventListener("click", toggleView);
+    }
+
+    const enableDomainLimitInput = document.getElementById("enableDomainLimit");
+    if (enableDomainLimitInput) {
+        enableDomainLimitInput.addEventListener("change", () => {
+            syncDomainFeatureVisibility({ enableDomainLimit: enableDomainLimitInput.checked });
+            scheduleTabCountsUpdate(0);
+        });
     }
 
     // Wire up change/keyup events for auto-save
@@ -390,6 +525,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (document.getElementById(key)) {
                 inputUpdates[key] = change.newValue;
+            }
+
+            if (COUNT_RELEVANT_OPTION_IDS.has(key)) {
                 shouldRefreshCounts = true;
             }
         }

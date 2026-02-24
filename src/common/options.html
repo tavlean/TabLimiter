@@ -110,7 +110,7 @@
                 <div class="card-header">
                     <img src="assets/windows.svg" alt="All Windows" class="card-icon"/>
                     <h2>All Windows</h2>
-                    <span class="window-badge" id="windowCountBadge">1</span>
+                    <span class="count-badge" id="windowCountBadge">1</span>
                 </div>
                 
                 <div class="card-content">
@@ -162,6 +162,76 @@
                                 <span class="progress-text">left</span>
                             </span>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Domain Card -->
+            <div class="card hidden" id="domainCard">
+                <div class="card-header">
+                    <svg
+                        class="card-icon"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        aria-hidden="true"
+                    >
+                        <path
+                            d="M7.2 5.4a4 4 0 0 1 5.6 0l.8.8a4 4 0 0 1 0 5.6l-1.6 1.6a4 4 0 0 1-5.6 0"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                        />
+                        <path
+                            d="M12.8 14.6a4 4 0 0 1-5.6 0l-.8-.8a4 4 0 0 1 0-5.6l1.6-1.6a4 4 0 0 1 5.6 0"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                    <h2>Domain</h2>
+                    <span class="count-badge" id="domainCountBadge">0</span>
+                </div>
+
+                <div class="card-content">
+                    <div class="stepper-group">
+                        <div class="stepper-container">
+                            <button
+                                type="button"
+                                class="stepper-btn"
+                                data-input="maxDomain"
+                                data-action="decrement"
+                                aria-label="Decrease maximum tabs per domain"
+                            >
+                                –
+                            </button>
+                            <input
+                                id="maxDomain"
+                                type="number"
+                                min="1"
+                                max="200"
+                                class="stepper-input"
+                                value="10"
+                                inputmode="numeric"
+                                aria-live="polite"
+                            />
+                            <button
+                                type="button"
+                                class="stepper-btn"
+                                data-input="maxDomain"
+                                data-action="increment"
+                                aria-label="Increase maximum tabs per domain"
+                            >
+                                +
+                            </button>
+                        </div>
+                        <label class="stepper-label">max tabs / domain</label>
+                    </div>
+
+                    <div class="domain-list-group">
+                        <ul class="domain-list" id="domainList" aria-live="polite"></ul>
+                        <p class="domain-empty hidden" id="domainEmptyState">No web domains open</p>
                     </div>
                 </div>
             </div>
@@ -233,6 +303,59 @@
                     <div class="label-desc">Pinned tabs count towards the limit</div>
                 </div>
             </label>
+
+            <label class="toggle-row">
+                <input
+                    id="enableDomainLimit"
+                    type="checkbox"
+                    class="toggle-input checkbox-input"
+                />
+                <span
+                    class="toggle-slider"
+                    aria-hidden="true"
+                ></span>
+                <div class="toggle-text">
+                    <div class="label-title">Domain Limit</div>
+                    <div class="label-desc">Limit tabs per domain and show top domains</div>
+                </div>
+            </label>
+
+            <div class="settings-stepper-row hidden" id="topDomainsCountRow">
+                <div class="toggle-text">
+                    <div class="label-title">Top Domains</div>
+                    <div class="label-desc">How many domains to list in the main view</div>
+                </div>
+                <div class="stepper-container stepper-container-compact">
+                    <button
+                        type="button"
+                        class="stepper-btn"
+                        data-input="topDomainsCount"
+                        data-action="decrement"
+                        aria-label="Decrease number of top domains to show"
+                    >
+                        –
+                    </button>
+                    <input
+                        id="topDomainsCount"
+                        type="number"
+                        min="1"
+                        max="20"
+                        class="stepper-input stepper-input-compact"
+                        value="5"
+                        inputmode="numeric"
+                        aria-live="polite"
+                    />
+                    <button
+                        type="button"
+                        class="stepper-btn"
+                        data-input="topDomainsCount"
+                        data-action="increment"
+                        aria-label="Increase number of top domains to show"
+                    >
+                        +
+                    </button>
+                </div>
+            </div>
         </div>
     </body>
 </html>

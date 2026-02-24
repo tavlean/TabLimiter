@@ -1,7 +1,7 @@
 {
     "name": "Tab Limiter - Per Window & Total",
     "description": "Limit & count open tabs – total and per window",
-    "version": "1.1.2",
+    "version": "1.2.0",
     "author": "Tavlean",
     "homepage_url": "https://github.com/tavlean/TabLimiter",
     "icons": {
@@ -24,7 +24,7 @@
     "background": {
         "scripts": ["background.js"]
     },
-    "permissions": ["storage", "notifications"],
+    "permissions": ["storage", "notifications", "tabs"],
     "browser_specific_settings": {
         "gecko": {
             "id": "tablimiter@tavlean.com",

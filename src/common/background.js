@@ -10,6 +10,27 @@ const windowRemaining = (options) =>
 const totalRemaining = (options) =>
     tabQuery(options).then((tabs) => options.maxTotal - tabs.length);
 
+const normalizeNumber = (value, fallback, min = 1, max = 9999) => {
+    const parsed = parseInt(value, 10);
+    if (Number.isNaN(parsed)) return fallback;
+    return Math.min(max, Math.max(min, parsed));
+};
+
+const getDomainFromUrl = (url) => {
+    if (!url) return null;
+
+    try {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+            return null;
+        }
+
+        return parsedUrl.hostname.toLowerCase().replace(/^www\./, "");
+    } catch (error) {
+        return null;
+    }
+};
+
 const updateBadge = (options) => {
     // Handle case when no options are provided
     if (!options) {
@@ -33,25 +54,51 @@ const updateBadge = (options) => {
 
 // ----------------------------------------------------------------------------
 
-// only resolves if there are too many tabs
-const detectTooManyTabsInWindow = (options) =>
-    new Promise((res) => {
-        tabQuery(options, { currentWindow: true }).then((tabs) => {
-            // Minimum of 1 allowed tab to prevent breaking browser
-            if (options.maxWindow < 1) return;
-            if (tabs.length > options.maxWindow) res("window");
-        });
-    });
+const detectTooManyTabsInWindow = async (options) => {
+    const maxWindow = normalizeNumber(options.maxWindow, 20);
+    const tabs = await tabQuery(options, { currentWindow: true });
+    return tabs.length > maxWindow ? "window" : null;
+};
 
-// only resolves if there are too many tabs
-const detectTooManyTabsInTotal = (options) =>
-    new Promise((res) => {
-        tabQuery(options).then((tabs) => {
-            // Minimum of 1 allowed tab to prevent breaking browser
-            if (options.maxTotal < 1) return;
-            if (tabs.length > options.maxTotal) res("total");
-        });
-    });
+const detectTooManyTabsInTotal = async (options) => {
+    const maxTotal = normalizeNumber(options.maxTotal, 50);
+    const tabs = await tabQuery(options);
+    return tabs.length > maxTotal ? "total" : null;
+};
+
+const detectTooManyTabsInDomain = async (options, tab) => {
+    if (!options.enableDomainLimit) {
+        return null;
+    }
+
+    const maxDomain = normalizeNumber(options.maxDomain, 10);
+    const domain = getDomainFromUrl(tab && tab.url);
+    if (!domain) {
+        return null;
+    }
+
+    const tabs = await tabQuery(options);
+    let domainCount = 0;
+
+    for (const openTab of tabs) {
+        if (getDomainFromUrl(openTab.url) === domain) {
+            domainCount += 1;
+            if (domainCount > maxDomain) {
+                return "domain";
+            }
+        }
+    }
+
+    return null;
+};
+
+const detectExceededLimit = async (options, tab) => {
+    return (
+        (await detectTooManyTabsInTotal(options)) ||
+        (await detectTooManyTabsInDomain(options, tab)) ||
+        (await detectTooManyTabsInWindow(options))
+    );
+};
 
 // get user options from storage
 const getOptions = () =>
@@ -74,7 +121,9 @@ const displayAlert = (options, place, movedToOtherWindow = false) =>
             switch (p1) {
                 case "place":
                 case "which": // backwards compatibility
-                    return place === "window" ? "one window" : "total";
+                    if (place === "window") return "one window";
+                    if (place === "domain") return "one domain";
+                    return "total";
 
                 case "maxPlace":
                 case "maxWhich": // backwards compatibility
@@ -104,19 +153,21 @@ const displayAlert = (options, place, movedToOtherWindow = false) =>
 // For Manifest V3 service worker, we need to track state differently
 // We'll use a simple approach without global state since service workers are ephemeral
 
-// resolves amount of tabs created based on current tab count
-const getTabCount = () => new Promise((res) => chrome.tabs.query({}, (tabs) => res(tabs.length)));
-
 // Handle tab creation with Manifest V3 service worker
 const handleExceedTabs = async (tab, options, place) => {
-    console.log(place);
-
     // CRITICAL: Always check total tab limit first
     const totalTabs = await tabQuery(options);
-    if (totalTabs.length >= options.maxTotal) {
+    const maxTotal = normalizeNumber(options.maxTotal, 50);
+    if (totalTabs.length > maxTotal) {
         // Total limit would be exceeded, close the tab and show alert
         chrome.tabs.remove(tab.id);
         displayAlert(options, "total", false);
+        return;
+    }
+
+    if (place === "domain") {
+        chrome.tabs.remove(tab.id);
+        displayAlert(options, "domain", false);
         return;
     }
 
@@ -145,7 +196,7 @@ const handleExceedTabs = async (tab, options, place) => {
 
             // Double-check total limit before proceeding
             const currentTotalTabs = await tabQuery(options);
-            if (currentTotalTabs.length >= options.maxTotal) {
+            if (currentTotalTabs.length > normalizeNumber(options.maxTotal, 50)) {
                 chrome.tabs.remove(tab.id);
                 displayAlert(options, "total", false);
                 return;
@@ -180,28 +231,31 @@ const handleExceedTabs = async (tab, options, place) => {
 };
 
 const handleTabCreated = async (tab) => {
-    return getOptions().then((options) => {
-        return Promise.race([detectTooManyTabsInWindow(options), detectTooManyTabsInTotal(options)])
-            .then(() => {
-                console.log("Tab creation detected, checking limits...");
+    try {
+        const options = await getOptions();
+        const initialExceededPlace = await detectExceededLimit(options, tab);
 
-                // For Manifest V3, we simplify the logic since service workers are ephemeral
-                // We'll just handle the immediate tab creation without complex state tracking
-                setTimeout(() => {
-                    // Recheck tab limits after a short delay to handle race conditions
-                    Promise.race([
-                        detectTooManyTabsInWindow(options),
-                        detectTooManyTabsInTotal(options),
-                    ]).then((newPlace) => {
-                        if (newPlace) {
-                            handleExceedTabs(tab, options, newPlace);
-                            updateBadge(options);
-                        }
-                    });
-                }, 100);
-            })
-            .catch((err) => console.error("Error handling tab creation:", err));
-    });
+        if (!initialExceededPlace) {
+            return;
+        }
+
+        // Recheck shortly after creation to reduce races while the tab settles.
+        setTimeout(async () => {
+            try {
+                const latestOptions = await getOptions();
+                const exceededPlace = await detectExceededLimit(latestOptions, tab);
+
+                if (exceededPlace) {
+                    await handleExceedTabs(tab, latestOptions, exceededPlace);
+                    updateBadge(latestOptions);
+                }
+            } catch (error) {
+                console.error("Error rechecking tab limits after creation:", error);
+            }
+        }, 100);
+    } catch (err) {
+        console.error("Error handling tab creation:", err);
+    }
 };
 
 // Initialize extension
@@ -210,7 +264,10 @@ const init = () => {
         defaultOptions: {
             maxTotal: 50,
             maxWindow: 20,
+            maxDomain: 10,
             exceedTabNewWindow: false,
+            enableDomainLimit: false,
+            topDomainsCount: 5,
             displayAlert: true,
             countPinnedTabs: false,
             displayBadge: false,
@@ -252,8 +309,27 @@ chrome.tabs.onRemoved.addListener(() => {
     getOptions().then(updateBadge);
 });
 
-chrome.tabs.onUpdated.addListener(() => {
-    getOptions().then(updateBadge);
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    getOptions()
+        .then(async (options) => {
+            updateBadge(options);
+
+            const urlChanged =
+                changeInfo && Object.prototype.hasOwnProperty.call(changeInfo, "url");
+            const pinnedChanged =
+                changeInfo && Object.prototype.hasOwnProperty.call(changeInfo, "pinned");
+
+            if (!urlChanged && !pinnedChanged) {
+                return;
+            }
+
+            const exceededPlace = await detectExceededLimit(options, tab);
+            if (exceededPlace) {
+                await handleExceedTabs(tab, options, exceededPlace);
+                updateBadge(options);
+            }
+        })
+        .catch((error) => console.error("Error handling tab update:", error));
 });
 
 chrome.windows.onFocusChanged.addListener(() => {
