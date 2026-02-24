@@ -46,7 +46,7 @@
         <div id="mainView" class="view-container">
             <div class="cards-container">
             <!-- Window Card -->
-            <div class="card">
+            <div class="card" id="windowCard">
                 <div class="card-header">
                     <img src="assets/window.svg" alt="Window" class="card-icon"/>
                     <h2>Window</h2>
@@ -106,7 +106,7 @@
             </div>
 
             <!-- All Windows Card -->
-            <div class="card">
+            <div class="card" id="allWindowsCard">
                 <div class="card-header">
                     <img src="assets/windows.svg" alt="All Windows" class="card-icon"/>
                     <h2>All Windows</h2>
@@ -167,7 +167,7 @@
             </div>
 
             <!-- Domain Card -->
-            <div class="card hidden" id="domainCard">
+            <div class="card" id="domainCard">
                 <div class="card-header">
                     <svg
                         class="card-icon"
@@ -191,12 +191,11 @@
                         />
                     </svg>
                     <h2>Domain</h2>
-                    <span class="count-badge" id="domainCountBadge">0</span>
                 </div>
 
                 <div class="card-content">
-                    <div class="stepper-group">
-                        <div class="stepper-container">
+                    <div class="stepper-group" id="domainStepperGroup">
+                        <div class="stepper-container" id="domainStepperContainer">
                             <button
                                 type="button"
                                 class="stepper-btn"
@@ -320,42 +319,6 @@
                 </div>
             </label>
 
-            <div class="settings-stepper-row hidden" id="topDomainsCountRow">
-                <div class="toggle-text">
-                    <div class="label-title">Top Domains</div>
-                    <div class="label-desc">How many domains to list in the main view</div>
-                </div>
-                <div class="stepper-container stepper-container-compact">
-                    <button
-                        type="button"
-                        class="stepper-btn"
-                        data-input="topDomainsCount"
-                        data-action="decrement"
-                        aria-label="Decrease number of top domains to show"
-                    >
-                        –
-                    </button>
-                    <input
-                        id="topDomainsCount"
-                        type="number"
-                        min="1"
-                        max="20"
-                        class="stepper-input stepper-input-compact"
-                        value="5"
-                        inputmode="numeric"
-                        aria-live="polite"
-                    />
-                    <button
-                        type="button"
-                        class="stepper-btn"
-                        data-input="topDomainsCount"
-                        data-action="increment"
-                        aria-label="Increase number of top domains to show"
-                    >
-                        +
-                    </button>
-                </div>
-            </div>
         </div>
     </body>
 </html>

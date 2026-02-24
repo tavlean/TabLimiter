@@ -33,13 +33,13 @@ let currentView = "main"; // 'main' or 'settings'
 let tabCountsUpdateTimer = null;
 let tabCountsUpdateInFlight = false;
 let tabCountsUpdatePending = false;
+const TOP_DOMAINS_LIMIT = 8;
 const COUNT_RELEVANT_OPTION_IDS = new Set([
     "maxWindow",
     "maxTotal",
     "countPinnedTabs",
     "enableDomainLimit",
     "maxDomain",
-    "topDomainsCount",
 ]);
 
 const getCachedInputs = () => {
@@ -73,14 +73,6 @@ const applyOptionsToInputs = (options) => {
     }
 
     syncDomainFeatureVisibility(options);
-};
-
-const normalizeNumber = (value, fallback, min = 1, max = 9999) => {
-    const parsed = parseInt(value, 10);
-    if (Number.isNaN(parsed)) {
-        return fallback;
-    }
-    return Math.min(max, Math.max(min, parsed));
 };
 
 const getCurrentOptions = () =>
@@ -126,24 +118,18 @@ const buildTopDomains = (tabs, maxItems) => {
         .sort((a, b) => (b[1] !== a[1] ? b[1] - a[1] : a[0].localeCompare(b[0])))
         .map(([domain, count]) => ({ domain, count }));
 
-    return {
-        uniqueDomainCount: sortedDomains.length,
-        topDomains: sortedDomains.slice(0, maxItems),
-    };
+    return sortedDomains.slice(0, maxItems);
 };
 
-const renderDomainList = (tabs, options) => {
+const renderDomainList = (tabs) => {
     const domainListEl = document.getElementById("domainList");
     const domainEmptyEl = document.getElementById("domainEmptyState");
-    const domainBadgeEl = document.getElementById("domainCountBadge");
 
-    if (!domainListEl || !domainEmptyEl || !domainBadgeEl) {
+    if (!domainListEl || !domainEmptyEl) {
         return;
     }
 
-    const topDomainsCount = normalizeNumber(options.topDomainsCount, 5, 1, 20);
-    const { uniqueDomainCount, topDomains } = buildTopDomains(tabs, topDomainsCount);
-    domainBadgeEl.textContent = uniqueDomainCount;
+    const topDomains = buildTopDomains(tabs, TOP_DOMAINS_LIMIT);
 
     domainListEl.textContent = "";
 
@@ -176,11 +162,12 @@ const renderDomainList = (tabs, options) => {
 };
 
 const syncDomainFeatureVisibility = (partialOptions = {}) => {
-    const domainCard = document.getElementById("domainCard");
-    const topDomainsCountRow = document.getElementById("topDomainsCountRow");
     const enabledInput = document.getElementById("enableDomainLimit");
+    const domainInput = document.getElementById("maxDomain");
+    const domainStepperGroup = document.getElementById("domainStepperGroup");
+    const domainStepperContainer = document.getElementById("domainStepperContainer");
 
-    if (!domainCard || !topDomainsCountRow) {
+    if (!domainInput) {
         return;
     }
 
@@ -189,8 +176,20 @@ const syncDomainFeatureVisibility = (partialOptions = {}) => {
             ? Boolean(partialOptions.enableDomainLimit)
             : Boolean(enabledInput && enabledInput.checked);
 
-    domainCard.classList.toggle("hidden", !isEnabled);
-    topDomainsCountRow.classList.toggle("hidden", !isEnabled);
+    domainInput.disabled = !isEnabled;
+
+    const domainStepperButtons = document.querySelectorAll('.stepper-btn[data-input="maxDomain"]');
+    for (let i = 0; i < domainStepperButtons.length; i++) {
+        domainStepperButtons[i].disabled = !isEnabled;
+    }
+
+    if (domainStepperGroup) {
+        domainStepperGroup.classList.toggle("is-disabled", !isEnabled);
+    }
+
+    if (domainStepperContainer) {
+        domainStepperContainer.classList.toggle("is-disabled", !isEnabled);
+    }
 };
 
 const runTabCountsUpdate = async () => {
@@ -309,9 +308,7 @@ const updateTabCounts = async () => {
             windowBadgeEl.textContent = windowCount;
         }
 
-        if (options.enableDomainLimit) {
-            renderDomainList(globalTabs, options);
-        }
+        renderDomainList(globalTabs);
     } catch (error) {
         console.error("Error updating tab counts:", error);
     }
