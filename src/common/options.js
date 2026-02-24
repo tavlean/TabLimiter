@@ -73,6 +73,7 @@ const applyOptionsToInputs = (options) => {
     }
 
     syncDomainFeatureVisibility(options);
+    syncColoredFaviconsVisibility(options);
 };
 
 const getCurrentOptions = () =>
@@ -160,18 +161,32 @@ const renderDomainList = (tabs) => {
         const domainLabel = document.createElement("span");
         domainLabel.className = "domain-label";
 
+        const faviconWrap = document.createElement("span");
+        faviconWrap.className = "domain-favicon-wrap";
+
         const favicon = document.createElement("img");
         favicon.className = "domain-favicon";
         favicon.alt = "";
         favicon.width = 16;
         favicon.height = 16;
-        favicon.src = faviconUrl || "assets/domain.svg";
+
+        const faviconOverlay = document.createElement("span");
+        faviconOverlay.className = "domain-favicon-overlay";
+
+        const setFaviconAsset = (src) => {
+            favicon.src = src;
+            faviconOverlay.style.maskImage = `url("${src}")`;
+            faviconOverlay.style.webkitMaskImage = `url("${src}")`;
+        };
+
+        setFaviconAsset(faviconUrl || "assets/domain.svg");
+
         favicon.addEventListener("error", () => {
             if (favicon.dataset.fallbackApplied === "true") {
                 return;
             }
             favicon.dataset.fallbackApplied = "true";
-            favicon.src = "assets/domain.svg";
+            setFaviconAsset("assets/domain.svg");
         });
 
         const domainName = document.createElement("span");
@@ -183,7 +198,8 @@ const renderDomainList = (tabs) => {
         countBadge.className = "count-badge domain-list-badge";
         countBadge.textContent = count;
 
-        domainLabel.append(favicon, domainName);
+        faviconWrap.append(favicon, faviconOverlay);
+        domainLabel.append(faviconWrap, domainName);
         item.append(domainLabel, countBadge);
         fragment.append(item);
     }
@@ -220,6 +236,18 @@ const syncDomainFeatureVisibility = (partialOptions = {}) => {
     if (domainStepperContainer) {
         domainStepperContainer.classList.toggle("is-disabled", !isEnabled);
     }
+};
+
+const syncColoredFaviconsVisibility = (partialOptions = {}) => {
+    const coloredFaviconsInput = document.getElementById("coloredFavicons");
+    const isEnabled =
+        "coloredFavicons" in partialOptions
+            ? Boolean(partialOptions.coloredFavicons)
+            : coloredFaviconsInput
+              ? coloredFaviconsInput.checked
+              : false;
+
+    document.body.classList.toggle("colored-favicons-enabled", isEnabled);
 };
 
 const runTabCountsUpdate = async () => {
@@ -423,6 +451,7 @@ const saveOptions = () => {
 
     const options = values;
     syncDomainFeatureVisibility(options);
+    syncColoredFaviconsVisibility(options);
 
     browserRef.storage.sync.set(options, () => {
         updateBadge(options);
@@ -442,6 +471,7 @@ const restoreOptions = () => {
 document.addEventListener("DOMContentLoaded", () => {
     // Cache inputs first, then restore their values
     $inputs = document.querySelectorAll('input[type="checkbox"], input[type="number"]');
+    syncColoredFaviconsVisibility();
     restoreOptions();
     runTabCountsUpdate(); // Update tab counts on page load
     loadViewPreference(); // Load saved view preference

@@ -267,6 +267,7 @@ const init = () => {
             maxDomain: 10,
             exceedTabNewWindow: false,
             enableDomainLimit: true,
+            coloredFavicons: false,
             displayAlert: true,
             countPinnedTabs: false,
             displayBadge: false,

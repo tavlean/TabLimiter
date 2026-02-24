@@ -296,6 +296,43 @@ body {
     width: 16px;
     height: 16px;
     flex-shrink: 0;
+    display: block;
+    filter: grayscale(100%);
+    position: relative;
+    z-index: 0;
+    opacity: 0.8;
+}
+
+.domain-favicon-wrap {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    display: block;
+    isolation: isolate;
+}
+
+.domain-favicon-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: var(--bg-quaternary);
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+}
+
+body.colored-favicons-enabled .domain-favicon {
+    filter: none;
+}
+
+body.colored-favicons-enabled .domain-favicon-overlay {
+    display: none;
 }
 
 .domain-name {
