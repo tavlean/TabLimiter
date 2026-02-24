@@ -30,6 +30,9 @@ const updateBadge = (options) => {
 
 let $inputs;
 let currentView = "main"; // 'main' or 'settings'
+let tabCountsUpdateTimer = null;
+let tabCountsUpdateInFlight = false;
+let tabCountsUpdatePending = false;
 
 const getCachedInputs = () => {
     if (!$inputs) {
@@ -60,6 +63,38 @@ const applyOptionsToInputs = (options) => {
 
         input.value = options[input.id];
     }
+};
+
+const runTabCountsUpdate = async () => {
+    if (tabCountsUpdateInFlight) {
+        tabCountsUpdatePending = true;
+        return;
+    }
+
+    tabCountsUpdateInFlight = true;
+    tabCountsUpdatePending = false;
+
+    try {
+        await updateTabCounts();
+    } finally {
+        tabCountsUpdateInFlight = false;
+
+        if (tabCountsUpdatePending) {
+            tabCountsUpdatePending = false;
+            scheduleTabCountsUpdate(75);
+        }
+    }
+};
+
+const scheduleTabCountsUpdate = (delay = 100) => {
+    if (tabCountsUpdateTimer) {
+        clearTimeout(tabCountsUpdateTimer);
+    }
+
+    tabCountsUpdateTimer = setTimeout(() => {
+        tabCountsUpdateTimer = null;
+        runTabCountsUpdate();
+    }, delay);
 };
 
 // Update progress bar color based on percentage
@@ -237,7 +272,7 @@ const saveOptions = () => {
 
     browserRef.storage.sync.set(options, () => {
         updateBadge(options);
-        updateTabCounts(); // Update tab counts when options are saved
+        scheduleTabCountsUpdate(0); // Coalesce UI refreshes across multiple triggers
     });
 };
 
@@ -254,7 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Cache inputs first, then restore their values
     $inputs = document.querySelectorAll('input[type="checkbox"], input[type="number"]');
     restoreOptions();
-    updateTabCounts(); // Update tab counts on page load
+    runTabCountsUpdate(); // Update tab counts on page load
     loadViewPreference(); // Load saved view preference
 
     // Settings toggle functionality
@@ -296,7 +331,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             input.value = newValue;
             input.dispatchEvent(new Event("change", { bubbles: true }));
-            updateTabCounts(); // Update tab counts when stepper buttons are clicked
         });
     });
 
@@ -314,8 +348,31 @@ document.addEventListener("DOMContentLoaded", () => {
         // no-op
     }
 
-    // Update tab counts periodically to keep them current
-    setInterval(updateTabCounts, 1000);
+    // Keep tab/window counts current without polling.
+    const addListenerIfAvailable = (eventObj, listener) => {
+        if (eventObj && typeof eventObj.addListener === "function") {
+            eventObj.addListener(listener);
+        }
+    };
+
+    const onTabCountRelevantChange = () => {
+        scheduleTabCountsUpdate();
+    };
+
+    addListenerIfAvailable(browserRef.tabs && browserRef.tabs.onCreated, onTabCountRelevantChange);
+    addListenerIfAvailable(browserRef.tabs && browserRef.tabs.onRemoved, onTabCountRelevantChange);
+    addListenerIfAvailable(browserRef.tabs && browserRef.tabs.onAttached, onTabCountRelevantChange);
+    addListenerIfAvailable(browserRef.tabs && browserRef.tabs.onDetached, onTabCountRelevantChange);
+
+    addListenerIfAvailable(browserRef.tabs && browserRef.tabs.onUpdated, (_, changeInfo) => {
+        // Counts only change here when pinning state changes and pinned tabs are excluded.
+        if (changeInfo && Object.prototype.hasOwnProperty.call(changeInfo, "pinned")) {
+            scheduleTabCountsUpdate();
+        }
+    });
+
+    addListenerIfAvailable(browserRef.windows && browserRef.windows.onCreated, onTabCountRelevantChange);
+    addListenerIfAvailable(browserRef.windows && browserRef.windows.onRemoved, onTabCountRelevantChange);
 
     // Keep multiple open popups/options pages in sync.
     browserRef.storage.onChanged.addListener((changes, areaName) => {
@@ -342,7 +399,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (shouldRefreshCounts) {
-            updateTabCounts();
+            scheduleTabCountsUpdate(0);
         }
     });
 });
