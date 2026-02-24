@@ -161,32 +161,19 @@ const renderDomainList = (tabs) => {
         const domainLabel = document.createElement("span");
         domainLabel.className = "domain-label";
 
-        const faviconWrap = document.createElement("span");
-        faviconWrap.className = "domain-favicon-wrap";
-
         const favicon = document.createElement("img");
         favicon.className = "domain-favicon";
         favicon.alt = "";
         favicon.width = 16;
         favicon.height = 16;
-
-        const faviconOverlay = document.createElement("span");
-        faviconOverlay.className = "domain-favicon-overlay";
-
-        const setFaviconAsset = (src) => {
-            favicon.src = src;
-            faviconOverlay.style.maskImage = `url("${src}")`;
-            faviconOverlay.style.webkitMaskImage = `url("${src}")`;
-        };
-
-        setFaviconAsset(faviconUrl || "assets/domain.svg");
+        favicon.src = faviconUrl || "assets/domain.svg";
 
         favicon.addEventListener("error", () => {
             if (favicon.dataset.fallbackApplied === "true") {
                 return;
             }
             favicon.dataset.fallbackApplied = "true";
-            setFaviconAsset("assets/domain.svg");
+            favicon.src = "assets/domain.svg";
         });
 
         const domainName = document.createElement("span");
@@ -198,8 +185,7 @@ const renderDomainList = (tabs) => {
         countBadge.className = "count-badge domain-list-badge";
         countBadge.textContent = count;
 
-        faviconWrap.append(favicon, faviconOverlay);
-        domainLabel.append(faviconWrap, domainName);
+        domainLabel.append(favicon, domainName);
         item.append(domainLabel, countBadge);
         fragment.append(item);
     }
@@ -416,23 +402,6 @@ const toggleView = () => {
         currentView = "main";
     }
 
-    // Save current view to storage
-    browserRef.storage.sync.set({ optionsView: currentView });
-};
-
-// Load saved view preference
-const loadViewPreference = () => {
-    browserRef.storage.sync.get(["optionsView"], (result) => {
-        if (result.optionsView === "settings") {
-            toggleView();
-        } else {
-            // Ensure subtitle is hidden in main view
-            const subtitle = document.getElementById("subtitle");
-            if (subtitle) {
-                subtitle.classList.add("hidden");
-            }
-        }
-    });
 };
 
 // Collect and save options to storage
@@ -474,7 +443,6 @@ document.addEventListener("DOMContentLoaded", () => {
     syncColoredFaviconsVisibility();
     restoreOptions();
     runTabCountsUpdate(); // Update tab counts on page load
-    loadViewPreference(); // Load saved view preference
 
     // Settings toggle functionality
     const settingsToggle = document.getElementById("settingsToggle");
