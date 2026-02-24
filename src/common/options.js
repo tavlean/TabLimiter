@@ -111,12 +111,24 @@ const buildTopDomains = (tabs, maxItems) => {
             continue;
         }
 
-        domainCounts.set(domain, (domainCounts.get(domain) || 0) + 1);
+        const existing = domainCounts.get(domain);
+        if (existing) {
+            existing.count += 1;
+            if (!existing.faviconUrl && tab.favIconUrl) {
+                existing.faviconUrl = tab.favIconUrl;
+            }
+            continue;
+        }
+
+        domainCounts.set(domain, {
+            count: 1,
+            faviconUrl: tab.favIconUrl || "",
+        });
     }
 
     const sortedDomains = Array.from(domainCounts.entries())
-        .sort((a, b) => (b[1] !== a[1] ? b[1] - a[1] : a[0].localeCompare(b[0])))
-        .map(([domain, count]) => ({ domain, count }));
+        .sort((a, b) => (b[1].count !== a[1].count ? b[1].count - a[1].count : a[0].localeCompare(b[0])))
+        .map(([domain, data]) => ({ domain, count: data.count, faviconUrl: data.faviconUrl }));
 
     return sortedDomains.slice(0, maxItems);
 };
@@ -141,9 +153,26 @@ const renderDomainList = (tabs) => {
     domainEmptyEl.classList.add("hidden");
 
     const fragment = document.createDocumentFragment();
-    for (const { domain, count } of topDomains) {
+    for (const { domain, count, faviconUrl } of topDomains) {
         const item = document.createElement("li");
         item.className = "domain-item";
+
+        const domainLabel = document.createElement("span");
+        domainLabel.className = "domain-label";
+
+        const favicon = document.createElement("img");
+        favicon.className = "domain-favicon";
+        favicon.alt = "";
+        favicon.width = 16;
+        favicon.height = 16;
+        favicon.src = faviconUrl || "assets/domain.svg";
+        favicon.addEventListener("error", () => {
+            if (favicon.dataset.fallbackApplied === "true") {
+                return;
+            }
+            favicon.dataset.fallbackApplied = "true";
+            favicon.src = "assets/domain.svg";
+        });
 
         const domainName = document.createElement("span");
         domainName.className = "domain-name";
@@ -154,7 +183,8 @@ const renderDomainList = (tabs) => {
         countBadge.className = "count-badge domain-list-badge";
         countBadge.textContent = count;
 
-        item.append(domainName, countBadge);
+        domainLabel.append(favicon, domainName);
+        item.append(domainLabel, countBadge);
         fragment.append(item);
     }
 
