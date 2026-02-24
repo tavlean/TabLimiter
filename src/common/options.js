@@ -31,6 +31,37 @@ const updateBadge = (options) => {
 let $inputs;
 let currentView = "main"; // 'main' or 'settings'
 
+const getCachedInputs = () => {
+    if (!$inputs) {
+        $inputs = document.querySelectorAll('input[type="checkbox"], input[type="number"]');
+    }
+    return $inputs;
+};
+
+const applyOptionsToInputs = (options) => {
+    const inputs = getCachedInputs();
+
+    for (let i = 0; i < inputs.length; i++) {
+        const input = inputs[i];
+
+        if (!(input.id in options)) {
+            continue;
+        }
+
+        if (input.type === "checkbox") {
+            input.checked = Boolean(options[input.id]);
+            continue;
+        }
+
+        // Preserve the user's in-progress edit in the active popup.
+        if (document.activeElement === input) {
+            continue;
+        }
+
+        input.value = options[input.id];
+    }
+};
+
 // Update progress bar color based on percentage
 const updateProgressBarColor = (progressEl, percentage) => {
     // Remove all existing color classes
@@ -212,18 +243,9 @@ const saveOptions = () => {
 
 // Restore options from storage
 const restoreOptions = () => {
-    // Ensure inputs are present
-    if (!$inputs) {
-        $inputs = document.querySelectorAll('input[type="checkbox"], input[type="number"]');
-    }
-
     browserRef.storage.sync.get("defaultOptions", (defaults) => {
         browserRef.storage.sync.get(defaults.defaultOptions, (options) => {
-            for (let i = 0; i < $inputs.length; i++) {
-                const input = $inputs[i];
-                const valueType = input.type === "checkbox" ? "checked" : "value";
-                input[valueType] = options[input.id];
-            }
+            applyOptionsToInputs(options);
         });
     });
 };
@@ -294,4 +316,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Update tab counts periodically to keep them current
     setInterval(updateTabCounts, 1000);
+
+    // Keep multiple open popups/options pages in sync.
+    browserRef.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName !== "sync") {
+            return;
+        }
+
+        const inputUpdates = {};
+        let shouldRefreshCounts = false;
+
+        for (const [key, change] of Object.entries(changes)) {
+            if (!change) {
+                continue;
+            }
+
+            if (document.getElementById(key)) {
+                inputUpdates[key] = change.newValue;
+                shouldRefreshCounts = true;
+            }
+        }
+
+        if (Object.keys(inputUpdates).length > 0) {
+            applyOptionsToInputs(inputUpdates);
+        }
+
+        if (shouldRefreshCounts) {
+            updateTabCounts();
+        }
+    });
 });
