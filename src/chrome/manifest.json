@@ -26,7 +26,15 @@
     "background": {
         "service_worker": "background.js"
     },
-    "permissions": ["storage", "notifications", "tabs"],
+    "permissions": ["storage", "notifications", "tabs", "alarms", "tabGroups"],
+    "commands": {
+        "show-status": {
+            "suggested_key": {
+                "default": "Alt+T"
+            },
+            "description": "Show tab limiter status notification"
+        }
+    },
 
     "manifest_version": 3
 }

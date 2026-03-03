@@ -6,11 +6,21 @@ A cross-browser extension to limit the number of open tabs, globally and per-win
 
 - Limit total open tabs in the browser
 - Limit open tabs per window
-- Show number of open tabs and remaining limit
-- Beautiful progress bars for showing usage and limits
+- Limit tabs per domain, with allow/block/custom exceptions
+- Group-aware limits for Chrome tab groups, including include/exclude from global counting
+- Close strategy options: newest, oldest, least recently used
+- Soft-limit warnings with separate warning/close thresholds
+- Scheduled limit profiles by day/time
+- Session snapshot, restore, rename, delete
+- One-click duplicate tab detection and cleanup
+- Per-domain custom limit overrides directly from popup
+- Export/import full settings JSON
+- Keyboard shortcut status notifications (`Alt+T`)
+- Show number of open tabs and remaining capacity
+- Accessible progress bars with warning markers and fraction labels
 - Option to count or ignore pinned tabs
-- Optional badge showing remaining tabs
-- Option to open excess tabs in another window when the per-window limit is reached
+- Optional badge modes (remaining, open, fraction) with severity color coding
+- Option to open excess tabs in another window when per-window limits are reached
 
 ## Installation
 

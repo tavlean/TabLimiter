@@ -24,7 +24,15 @@
     "background": {
         "scripts": ["background.js"]
     },
-    "permissions": ["storage", "notifications", "tabs"],
+    "permissions": ["storage", "notifications", "tabs", "alarms"],
+    "commands": {
+        "show-status": {
+            "suggested_key": {
+                "default": "Alt+T"
+            },
+            "description": "Show tab limiter status notification"
+        }
+    },
     "browser_specific_settings": {
         "gecko": {
             "id": "tablimiter@tavlean.com",

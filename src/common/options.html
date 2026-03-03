@@ -22,7 +22,9 @@
     </head>
 
     <body>
-        <div class="header">
+        <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+        <header class="header">
             <div class="header-left">
                 <img
                     src="assets/icon32.png"
@@ -30,288 +32,413 @@
                     class="header-icon"
                 />
                 <h1>Tab Limiter</h1>
-                <div class="subtitle hidden" id="subtitle">| Settings</div>
+                <div class="subtitle" id="subtitle">Status</div>
+                <span class="pill hidden" id="activeScheduleChip">No schedule</span>
             </div>
-            <button
-                type="button"
-                id="settingsToggle"
-                class="settings-btn"
-                aria-label="Toggle settings"
-                aria-expanded="false"
-            >
-                <img src="assets/settings.svg" alt="Settings" class="settings-icon" />
-            </button>
-        </div>
+            <div class="header-actions">
+                <button
+                    type="button"
+                    id="duplicatesBtn"
+                    class="header-btn"
+                    aria-label="Find duplicate tabs"
+                >
+                    Duplicates
+                    <span class="count-badge" id="duplicatesCountBadge">0</span>
+                </button>
+                <button
+                    type="button"
+                    id="sessionsToggle"
+                    class="header-btn"
+                    aria-label="Open saved sessions"
+                >
+                    Sessions
+                </button>
+                <button
+                    type="button"
+                    id="settingsToggle"
+                    class="settings-btn"
+                    aria-label="Toggle settings"
+                    aria-expanded="false"
+                >
+                    <img src="assets/settings.svg" alt="Settings" class="settings-icon" />
+                </button>
+            </div>
+        </header>
 
         <div id="mainView" class="view-container">
             <div class="cards-container">
-            <div class="card" id="windowCard">
-                <div class="card-header">
-                    <img src="assets/window.svg" alt="Window" class="card-icon"/>
-                    <h2>Window</h2>
-                </div>
-                
-                <div class="card-content">
-                    <div class="stepper-group">
-                        <div class="stepper-container">
-                            <button
-                                type="button"
-                                class="stepper-btn"
-                                data-input="maxWindow"
-                                data-action="decrement"
-                                aria-label="Decrease maximum tabs per window"
-                            >
-                                –
-                            </button>
-                            <input
-                                id="maxWindow"
-                                type="number"
-                                min="1"
-                                max="1337"
-                                class="stepper-input"
-                                value="20"
-                                inputmode="numeric"
-                                aria-live="polite"
-                            />
-                            <button
-                                type="button"
-                                class="stepper-btn"
-                                data-input="maxWindow"
-                                data-action="increment"
-                                aria-label="Increase maximum tabs per window"
-                            >
-                                +
-                            </button>
-                        </div>
-                        <label class="stepper-label">max tabs / window</label>
-                    </div>
-                    
-                    <div class="progress-group">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="windowProgressFill"></div>
-                        </div>
-                        <div class="progress-labels">
-                            <span class="progress-item">
-                                <span class="progress-number" id="windowOpenCount">0</span>
-                                <span class="progress-text">open</span>
-                            </span>
-                            <span class="progress-item">
-                                <span class="progress-number" id="windowLeftCount">0</span>
-                                <span class="progress-text">left</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card" id="allWindowsCard">
-                <div class="card-header">
-                    <img src="assets/windows.svg" alt="All Windows" class="card-icon"/>
-                    <h2>All Windows</h2>
-                    <span class="count-badge" id="windowCountBadge">1</span>
-                </div>
-                
-                <div class="card-content">
-                    <div class="stepper-group">
-                        <div class="stepper-container">
-                            <button
-                                type="button"
-                                class="stepper-btn"
-                                data-input="maxTotal"
-                                data-action="decrement"
-                                aria-label="Decrease maximum total tabs"
-                            >
-                                –
-                            </button>
-                            <input
-                                id="maxTotal"
-                                type="number"
-                                min="1"
-                                max="1337"
-                                class="stepper-input"
-                                value="50"
-                                inputmode="numeric"
-                                aria-live="polite"
-                            />
-                            <button
-                                type="button"
-                                class="stepper-btn"
-                                data-input="maxTotal"
-                                data-action="increment"
-                                aria-label="Increase maximum total tabs"
-                            >
-                                +
-                            </button>
-                        </div>
-                        <label class="stepper-label">max tabs total</label>
-                    </div>
-                    
-                    <div class="progress-group">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="globalProgressFill"></div>
-                        </div>
-                        <div class="progress-labels">
-                            <span class="progress-item">
-                                <span class="progress-number" id="globalOpenCount">0</span>
-                                <span class="progress-text">open</span>
-                            </span>
-                            <span class="progress-item">
-                                <span class="progress-number" id="globalLeftCount">0</span>
-                                <span class="progress-text">left</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card" id="domainCard">
-                <div class="card-header">
-               <img src="assets/domain.svg" alt="Window" class="card-icon"/>
-                    <h2>Domain</h2>
-                </div>
-
-                <div class="card-content">
-                    <div class="stepper-group" id="domainStepperGroup">
-                        <div class="stepper-container" id="domainStepperContainer">
-                            <button
-                                type="button"
-                                class="stepper-btn"
-                                data-input="maxDomain"
-                                data-action="decrement"
-                                aria-label="Decrease maximum tabs per domain"
-                            >
-                                –
-                            </button>
-                            <input
-                                id="maxDomain"
-                                type="number"
-                                min="1"
-                                max="200"
-                                class="stepper-input"
-                                value="10"
-                                inputmode="numeric"
-                                aria-live="polite"
-                            />
-                            <button
-                                type="button"
-                                class="stepper-btn"
-                                data-input="maxDomain"
-                                data-action="increment"
-                                aria-label="Increase maximum tabs per domain"
-                            >
-                                +
-                            </button>
-                        </div>
-                        <label class="stepper-label">max tabs / domain</label>
+                <section class="card" id="windowCard">
+                    <div class="card-header">
+                        <img src="assets/window.svg" alt="Window" class="card-icon" />
+                        <h2>Window</h2>
                     </div>
 
-                    <div class="domain-list-group">
-                        <ul class="domain-list" id="domainList" aria-live="polite"></ul>
-                        <p class="domain-empty hidden" id="domainEmptyState">No web domains open</p>
+                    <div class="card-content">
+                        <div class="stepper-group">
+                            <div class="stepper-container">
+                                <button
+                                    type="button"
+                                    class="stepper-btn"
+                                    data-input="maxWindow"
+                                    data-action="decrement"
+                                    aria-label="Decrease maximum tabs per window"
+                                >
+                                    -
+                                </button>
+                                <input
+                                    id="maxWindow"
+                                    type="number"
+                                    min="1"
+                                    max="1337"
+                                    class="stepper-input"
+                                    value="20"
+                                    inputmode="numeric"
+                                />
+                                <button
+                                    type="button"
+                                    class="stepper-btn"
+                                    data-input="maxWindow"
+                                    data-action="increment"
+                                    aria-label="Increase maximum tabs per window"
+                                >
+                                    +
+                                </button>
+                            </div>
+                            <label class="stepper-label" for="maxWindow">max tabs / window</label>
+                        </div>
+
+                        <div class="progress-group">
+                            <div
+                                class="progress-bar"
+                                id="windowProgressBar"
+                                role="progressbar"
+                                aria-label="Window tab usage"
+                                aria-valuemin="0"
+                                aria-valuenow="0"
+                                aria-valuemax="20"
+                            >
+                                <div class="progress-fill" id="windowProgressFill"></div>
+                                <span class="progress-marker" id="windowWarnMarker"></span>
+                            </div>
+                            <div class="progress-labels">
+                                <span class="progress-item">
+                                    <span class="progress-number" id="windowOpenCount">0</span>
+                                    <span class="progress-text">open</span>
+                                </span>
+                                <span class="progress-item">
+                                    <span class="progress-number" id="windowLeftCount">0</span>
+                                    <span class="progress-text">left</span>
+                                </span>
+                                <span class="progress-item progress-fraction" id="windowFractionLabel">0/20</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </section>
+
+                <section class="card" id="allWindowsCard">
+                    <div class="card-header">
+                        <img src="assets/windows.svg" alt="All Windows" class="card-icon" />
+                        <h2>All Windows</h2>
+                        <span class="count-badge" id="windowCountBadge">1</span>
+                    </div>
+
+                    <div class="card-content">
+                        <div class="stepper-group">
+                            <div class="stepper-container">
+                                <button
+                                    type="button"
+                                    class="stepper-btn"
+                                    data-input="maxTotal"
+                                    data-action="decrement"
+                                    aria-label="Decrease maximum total tabs"
+                                >
+                                    -
+                                </button>
+                                <input
+                                    id="maxTotal"
+                                    type="number"
+                                    min="1"
+                                    max="1337"
+                                    class="stepper-input"
+                                    value="50"
+                                    inputmode="numeric"
+                                />
+                                <button
+                                    type="button"
+                                    class="stepper-btn"
+                                    data-input="maxTotal"
+                                    data-action="increment"
+                                    aria-label="Increase maximum total tabs"
+                                >
+                                    +
+                                </button>
+                            </div>
+                            <label class="stepper-label" for="maxTotal">max tabs total</label>
+                        </div>
+
+                        <div class="progress-group">
+                            <div
+                                class="progress-bar"
+                                id="globalProgressBar"
+                                role="progressbar"
+                                aria-label="All windows tab usage"
+                                aria-valuemin="0"
+                                aria-valuenow="0"
+                                aria-valuemax="50"
+                            >
+                                <div class="progress-fill" id="globalProgressFill"></div>
+                                <span class="progress-marker" id="globalWarnMarker"></span>
+                            </div>
+                            <div class="progress-labels">
+                                <span class="progress-item">
+                                    <span class="progress-number" id="globalOpenCount">0</span>
+                                    <span class="progress-text">open</span>
+                                </span>
+                                <span class="progress-item">
+                                    <span class="progress-number" id="globalLeftCount">0</span>
+                                    <span class="progress-text">left</span>
+                                </span>
+                                <span class="progress-item progress-fraction" id="globalFractionLabel">0/50</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card" id="domainCard">
+                    <div class="card-header">
+                        <img src="assets/domain.svg" alt="Domain" class="card-icon" />
+                        <h2>Domain</h2>
+                    </div>
+
+                    <div class="card-content">
+                        <div class="stepper-group" id="domainStepperGroup">
+                            <div class="stepper-container" id="domainStepperContainer">
+                                <button
+                                    type="button"
+                                    class="stepper-btn"
+                                    data-input="maxDomain"
+                                    data-action="decrement"
+                                    aria-label="Decrease maximum tabs per domain"
+                                >
+                                    -
+                                </button>
+                                <input
+                                    id="maxDomain"
+                                    type="number"
+                                    min="1"
+                                    max="200"
+                                    class="stepper-input"
+                                    value="10"
+                                    inputmode="numeric"
+                                />
+                                <button
+                                    type="button"
+                                    class="stepper-btn"
+                                    data-input="maxDomain"
+                                    data-action="increment"
+                                    aria-label="Increase maximum tabs per domain"
+                                >
+                                    +
+                                </button>
+                            </div>
+                            <label class="stepper-label" for="maxDomain">max tabs / domain</label>
+                        </div>
+
+                        <div class="domain-list-group">
+                            <ul class="domain-list" id="domainList" aria-live="polite"></ul>
+                            <p class="domain-empty hidden" id="domainEmptyState">No web domains open</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card" id="groupsCard">
+                    <div class="card-header">
+                        <h2>Groups</h2>
+                    </div>
+
+                    <div class="card-content groups-content">
+                        <ul class="group-list" id="groupList" aria-live="polite"></ul>
+                        <p class="domain-empty hidden" id="groupEmptyState">
+                            No tab groups found in open windows.
+                        </p>
+                        <p class="domain-empty hidden" id="groupFeatureUnavailable">
+                            Tab groups API is unavailable in this browser.
+                        </p>
+                    </div>
+                </section>
             </div>
         </div>
+
+        <div id="sessionsView" class="view-container hidden">
+            <section class="section session-actions">
+                <div class="button-row">
+                    <button type="button" class="action-btn" id="saveSessionBtn">Save Current Session</button>
+                    <button type="button" class="action-btn secondary" id="refreshSessionsBtn">Refresh</button>
+                </div>
+            </section>
+            <section class="section">
+                <h2>Saved Sessions</h2>
+                <ul class="session-list" id="sessionList"></ul>
+                <p class="domain-empty hidden" id="sessionEmptyState">No saved sessions yet.</p>
+            </section>
         </div>
 
         <div id="settingsView" class="view-container hidden">
-            <div class="section">
-                        <label class="toggle-row">
-                <input
-                    id="enableDomainLimit"
-                    type="checkbox"
-                    class="toggle-input checkbox-input"
-                />
-                <span
-                    class="toggle-slider"
-                    aria-hidden="true"
-                ></span>
-                <div class="toggle-text">
-                    <div class="label-title">Limit per Domain</div>
-                    <div class="label-desc">Limit max tabs per domain</div>
-                </div>
-            </label>
+            <section class="section">
+                <h2>General</h2>
                 <label class="toggle-row">
-                <input
-                    id="displayBadge"
-                    type="checkbox"
-                    class="toggle-input checkbox-input"
-                />
-                <span
-                    class="toggle-slider"
-                    aria-hidden="true"
-                ></span>
-                <div class="toggle-text">
-                    <div class="label-title">Badge</div>
-                    <div class="label-desc">Show remaining tabs on icon</div>
+                    <input id="enableDomainLimit" type="checkbox" class="toggle-input checkbox-input" />
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                    <div class="toggle-text">
+                        <div class="label-title">Limit per Domain</div>
+                        <div class="label-desc">Limit tabs by domain when no custom override exists.</div>
+                    </div>
+                </label>
+                <label class="toggle-row">
+                    <input id="displayBadge" type="checkbox" class="toggle-input checkbox-input" />
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                    <div class="toggle-text">
+                        <div class="label-title">Badge</div>
+                        <div class="label-desc">Show tab counts on the extension badge.</div>
+                    </div>
+                </label>
+                <label class="toggle-row">
+                    <input id="displayAlert" type="checkbox" class="toggle-input checkbox-input" />
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                    <div class="toggle-text">
+                        <div class="label-title">Alerts</div>
+                        <div class="label-desc">Show warning/limit notifications.</div>
+                    </div>
+                </label>
+                <label class="toggle-row">
+                    <input id="exceedTabNewWindow" type="checkbox" class="toggle-input checkbox-input" />
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                    <div class="toggle-text">
+                        <div class="label-title">Balance Tabs</div>
+                        <div class="label-desc">Move overflow tabs to a relevant window.</div>
+                    </div>
+                </label>
+                <label class="toggle-row">
+                    <input id="countPinnedTabs" type="checkbox" class="toggle-input checkbox-input" />
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                    <div class="toggle-text">
+                        <div class="label-title">Count Pinned Tabs</div>
+                        <div class="label-desc">Include pinned tabs in all counters.</div>
+                    </div>
+                </label>
+                <label class="toggle-row">
+                    <input id="coloredFavicons" type="checkbox" class="toggle-input checkbox-input" />
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                    <div class="toggle-text">
+                        <div class="label-title">Colored Favicons</div>
+                        <div class="label-desc">Use source favicon colors in domain list.</div>
+                    </div>
+                </label>
+            </section>
+
+            <section class="section">
+                <h2>Behavior</h2>
+                <label class="field-row">
+                    <span>Close strategy</span>
+                    <select id="closeStrategy">
+                        <option value="newest">Close newest tab</option>
+                        <option value="oldest">Close oldest tab</option>
+                        <option value="lru">Close least recently used</option>
+                    </select>
+                </label>
+                <p class="field-help">Newest closes the latest tab, oldest closes first-opened, LRU closes least recently focused.</p>
+                <label class="field-row">
+                    <span>Badge display</span>
+                    <select id="badgeDisplayMode">
+                        <option value="remaining">Remaining tabs</option>
+                        <option value="open">Open tabs</option>
+                        <option value="fraction">Window fraction</option>
+                    </select>
+                </label>
+                <label class="field-row">
+                    <span>Notification mode</span>
+                    <select id="notificationMode">
+                        <option value="system">System notifications</option>
+                        <option value="toast">In-popup toast (fallback to system)</option>
+                    </select>
+                </label>
+                <label class="field-row">
+                    <span>Shortcut status</span>
+                    <button type="button" class="action-btn" id="showStatusBtn">Show Status Notification</button>
+                </label>
+            </section>
+
+            <section class="section">
+                <h2>Soft Limits</h2>
+                <label class="toggle-row">
+                    <input id="softLimitsEnabled" type="checkbox" class="toggle-input checkbox-input" />
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                    <div class="toggle-text">
+                        <div class="label-title">Enable Soft Limit Mode</div>
+                        <div class="label-desc">Warn before hard close using type-specific thresholds.</div>
+                    </div>
+                </label>
+                <div class="threshold-grid">
+                    <div class="threshold-row">
+                        <span class="threshold-label">Window</span>
+                        <label>Warn <input id="softLimitWindowWarn" type="number" min="1" max="9999" /></label>
+                        <label>Close <input id="softLimitWindowClose" type="number" min="1" max="9999" /></label>
+                    </div>
+                    <div class="threshold-row">
+                        <span class="threshold-label">Total</span>
+                        <label>Warn <input id="softLimitTotalWarn" type="number" min="1" max="9999" /></label>
+                        <label>Close <input id="softLimitTotalClose" type="number" min="1" max="9999" /></label>
+                    </div>
+                    <div class="threshold-row">
+                        <span class="threshold-label">Domain</span>
+                        <label>Warn <input id="softLimitDomainWarn" type="number" min="1" max="9999" /></label>
+                        <label>Close <input id="softLimitDomainClose" type="number" min="1" max="9999" /></label>
+                    </div>
                 </div>
-            </label>
+            </section>
 
-            <label class="toggle-row">
-                <input
-                    id="displayAlert"
-                    type="checkbox"
-                    class="toggle-input checkbox-input"
-                />
-                <span
-                    class="toggle-slider"
-                    aria-hidden="true"
-                ></span>
-                <div class="toggle-text">
-                    <div class="label-title">Alert</div>
-                    <div class="label-desc">Show alert when limit is reached</div>
+            <section class="section">
+                <h2>Exceptions</h2>
+                <p class="field-help">Allow never closes, block closes immediately, custom applies a specific domain limit.</p>
+                <div id="domainRulesList" class="list-editor"></div>
+                <button type="button" id="addDomainRuleBtn" class="action-btn">Add Exception</button>
+            </section>
+
+            <section class="section">
+                <h2>Schedules</h2>
+                <label class="toggle-row">
+                    <input id="schedulesEnabled" type="checkbox" class="toggle-input checkbox-input" />
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                    <div class="toggle-text">
+                        <div class="label-title">Enable Schedules</div>
+                        <div class="label-desc">Apply different limits at specific times.</div>
+                    </div>
+                </label>
+                <div id="schedulesList" class="list-editor"></div>
+                <button type="button" id="addScheduleBtn" class="action-btn">Add Schedule</button>
+            </section>
+
+            <section class="section">
+                <h2>Notifications</h2>
+                <label class="field-block">
+                    <span>Limit reached message</span>
+                    <textarea id="alertMessage" rows="3"></textarea>
+                </label>
+                <label class="field-block">
+                    <span>Warning message</span>
+                    <textarea id="warningMessage" rows="2"></textarea>
+                </label>
+                <p class="field-help">Available placeholders: {place}, {maxPlace}, {currentCount}, {domain}, {windowCount}, {strategy}</p>
+            </section>
+
+            <section class="section">
+                <h2>Import / Export</h2>
+                <div class="button-row">
+                    <button type="button" id="exportBtn" class="action-btn">Export Settings</button>
+                    <button type="button" id="importBtn" class="action-btn secondary">Import Settings</button>
+                    <input type="file" id="importInput" accept="application/json" class="hidden" />
                 </div>
-            </label>
-
-            <label class="toggle-row">
-                <input
-                    id="exceedTabNewWindow"
-                    type="checkbox"
-                    class="toggle-input checkbox-input"
-                />
-                <span
-                    class="toggle-slider"
-                    aria-hidden="true"
-                ></span>
-                <div class="toggle-text">
-                    <div class="label-title">Balance Tabs</div>
-                    <div class="label-desc">Open extra tabs in other window</div>
-                </div>
-            </label>
-
-            <label class="toggle-row">
-                <input
-                    id="countPinnedTabs"
-                    type="checkbox"
-                    class="toggle-input checkbox-input"
-                />
-                <span
-                    class="toggle-slider"
-                    aria-hidden="true"
-                ></span>
-                <div class="toggle-text">
-                    <div class="label-title">Count Pinned</div>
-                    <div class="label-desc">Pinned tabs count towards the limit</div>
-                </div>
-            </label>
-
-            <label class="toggle-row">
-                <input
-                    id="coloredFavicons"
-                    type="checkbox"
-                    class="toggle-input checkbox-input"
-                />
-                <span
-                    class="toggle-slider"
-                    aria-hidden="true"
-                ></span>
-                <div class="toggle-text">
-                    <div class="label-title">Colored favicons</div>
-                    <div class="label-desc">Show colored favicons in the domain list</div>
-                </div>
-            </label>
-
-
+            </section>
         </div>
     </body>
 </html>
