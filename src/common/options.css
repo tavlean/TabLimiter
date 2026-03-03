@@ -188,7 +188,7 @@ body {
 #domainCard .card-content {
     flex: 1;
     align-items: stretch;
-    gap: 24px;
+    gap: 32px;
 }
 
 .stepper-group {
