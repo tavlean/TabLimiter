@@ -100,9 +100,13 @@ body {
     color: var(--text-primary);
 }
 
+.header .plus {
+    color: var(--text-quinary);
+}
+
 .subtitle {
     font-size: 14px;
-    color: var(--text-tertiary);
+    color: var(--text-quaternary);
     margin: 0;
 }
 
@@ -619,4 +623,25 @@ body.colored-favicons-enabled .domain-favicon {
 
 .progress-fill.red {
     background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%); /* red-500 to red-600 */
+}
+
+/* Footer */
+.footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding-top: 16px;
+    font-size: 11px;
+    color: var(--text-quinary);
+}
+
+.footer a {
+    color: var(--text-quinary);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.footer a:hover {
+    color: var(--text-tertiary);
 }

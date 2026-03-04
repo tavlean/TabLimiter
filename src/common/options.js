@@ -128,7 +128,9 @@ const buildTopDomains = (tabs, maxItems) => {
     }
 
     const sortedDomains = Array.from(domainCounts.entries())
-        .sort((a, b) => (b[1].count !== a[1].count ? b[1].count - a[1].count : a[0].localeCompare(b[0])))
+        .sort((a, b) =>
+            b[1].count !== a[1].count ? b[1].count - a[1].count : a[0].localeCompare(b[0]),
+        )
         .map(([domain, data]) => ({ domain, count: data.count, faviconUrl: data.faviconUrl }));
 
     return sortedDomains.slice(0, maxItems);
@@ -401,7 +403,6 @@ const toggleView = () => {
 
         currentView = "main";
     }
-
 };
 
 // Collect and save options to storage
@@ -430,6 +431,9 @@ const saveOptions = () => {
 
 // Restore options from storage
 const restoreOptions = () => {
+    const manifest = browserRef.runtime.getManifest();
+    document.getElementById("footerVersion").textContent = `v${manifest.version}`;
+
     browserRef.storage.sync.get("defaultOptions", (defaults) => {
         browserRef.storage.sync.get(defaults.defaultOptions, (options) => {
             applyOptionsToInputs(options);
@@ -460,7 +464,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Wire up change/keyup events for auto-save
     const onChangeInputs = document.querySelectorAll(
-        'input[type="checkbox"], input[type="number"]'
+        'input[type="checkbox"], input[type="number"]',
     );
     const onKeyupInputs = document.querySelectorAll('input[type="number"]');
 
@@ -531,8 +535,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    addListenerIfAvailable(browserRef.windows && browserRef.windows.onCreated, onTabCountRelevantChange);
-    addListenerIfAvailable(browserRef.windows && browserRef.windows.onRemoved, onTabCountRelevantChange);
+    addListenerIfAvailable(
+        browserRef.windows && browserRef.windows.onCreated,
+        onTabCountRelevantChange,
+    );
+    addListenerIfAvailable(
+        browserRef.windows && browserRef.windows.onRemoved,
+        onTabCountRelevantChange,
+    );
 
     // Keep multiple open popups/options pages in sync.
     browserRef.storage.onChanged.addListener((changes, areaName) => {

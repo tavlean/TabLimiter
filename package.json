@@ -1,7 +1,7 @@
 {
-    "name": "tablimiter",
+    "name": "tablimiter-plus",
     "version": "1.1.0",
-    "description": "Browser extension to limit total and per-window tab counts",
+    "description": "Browser extension to limit total, per-window, and per-domain tab counts",
     "private": true,
     "scripts": {
         "clean": "rm -rf dist",
@@ -9,8 +9,8 @@
         "dev:chrome": "rm -rf dist/chrome-dev && mkdir -p dist/chrome-dev/assets && cp -r shared-assets/* dist/chrome-dev/assets/ && cp -r src/common/* dist/chrome-dev/ && cp src/chrome/manifest.json dist/chrome-dev/",
         "dev:firefox": "rm -rf dist/firefox-dev && mkdir -p dist/firefox-dev/assets && cp -r shared-assets/* dist/firefox-dev/assets/ && cp -r src/common/* dist/firefox-dev/ && cp src/firefox/manifest.json dist/firefox-dev/",
         "build": "npm run build:chrome && npm run build:firefox",
-        "build:chrome": "rm -rf dist/chrome-build && mkdir -p dist/chrome-build/assets && cp -r shared-assets/* dist/chrome-build/assets/ && cp -r src/common/* dist/chrome-build/ && cp src/chrome/manifest.json dist/chrome-build/ && cd dist/chrome-build && zip -r ../tablimiter-chrome.zip *",
-        "build:firefox": "rm -rf dist/firefox-build && mkdir -p dist/firefox-build/assets && cp -r shared-assets/* dist/firefox-build/assets/ && cp -r src/common/* dist/firefox-build/ && cp src/firefox/manifest.json dist/firefox-build/ && cd dist/firefox-build && zip -r ../tablimiter-firefox.zip *"
+        "build:chrome": "rm -rf dist/chrome-build && mkdir -p dist/chrome-build/assets && cp -r shared-assets/* dist/chrome-build/assets/ && cp -r src/common/* dist/chrome-build/ && cp src/chrome/manifest.json dist/chrome-build/ && cd dist/chrome-build && zip -r ../tablimiter-plus-chrome.zip *",
+        "build:firefox": "rm -rf dist/firefox-build && mkdir -p dist/firefox-build/assets && cp -r shared-assets/* dist/firefox-build/assets/ && cp -r src/common/* dist/firefox-build/ && cp src/firefox/manifest.json dist/firefox-build/ && cd dist/firefox-build && zip -r ../tablimiter-plus-firefox.zip *"
     },
     "keywords": [
         "chrome-extension",

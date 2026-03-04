@@ -1,6 +1,6 @@
-# Tab Limiter
+# Tab Limiter Plus
 
-A cross-browser extension to limit the number of open tabs, globally and per-window. Supports Chrome and Firefox from one shared source layout.
+A cross-browser extension to limit the number of open tabs, globally, per-window, and per-domain. Supports Chrome and Firefox from one shared source layout.
 
 ## Features
 
