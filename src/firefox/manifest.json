@@ -26,7 +26,8 @@
     "background": {
         "scripts": ["background.js"]
     },
-    "permissions": ["storage", "notifications", "tabs"],
+    "permissions": ["storage", "notifications"],
+    "optional_permissions": ["tabs"],
     "browser_specific_settings": {
         "gecko": {
             "id": "tablimiter@tavlean.com",

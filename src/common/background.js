@@ -1,3 +1,12 @@
+const hasTabsPermission = () =>
+    new Promise((resolve) => {
+        if (chrome.permissions && typeof chrome.permissions.contains === "function") {
+            chrome.permissions.contains({ permissions: ["tabs"] }, resolve);
+        } else {
+            resolve(false);
+        }
+    });
+
 const tabQuery = (options, params = {}) =>
     new Promise((res) => {
         if (!options.countPinnedTabs) params.pinned = false; // only non-pinned tabs
@@ -68,6 +77,12 @@ const detectTooManyTabsInTotal = async (options) => {
 
 const detectTooManyTabsInDomain = async (options, tab) => {
     if (!options.enableDomainLimit) {
+        return null;
+    }
+
+    // Without the "tabs" permission, tab.url is undefined — skip domain checks.
+    const hasPermission = await hasTabsPermission();
+    if (!hasPermission) {
         return null;
     }
 
@@ -175,7 +190,7 @@ const handleExceedTabs = async (tab, options, place) => {
         try {
             // Find all windows and their tab counts
             const windows = await new Promise((resolve) =>
-                chrome.windows.getAll({ populate: true }, resolve)
+                chrome.windows.getAll({ populate: true }, resolve),
             );
 
             let bestWindow = null;
@@ -184,7 +199,7 @@ const handleExceedTabs = async (tab, options, place) => {
             // Find existing window with most available capacity
             for (const window of windows) {
                 const windowTabs = window.tabs.filter((tab) =>
-                    options.countPinnedTabs ? true : !tab.pinned
+                    options.countPinnedTabs ? true : !tab.pinned,
                 );
                 const remainingCapacity = options.maxWindow - windowTabs.length;
 
@@ -266,7 +281,7 @@ const init = () => {
             maxWindow: 20,
             maxDomain: 10,
             exceedTabNewWindow: false,
-            enableDomainLimit: true,
+            enableDomainLimit: false,
             coloredFavicons: false,
             displayAlert: true,
             countPinnedTabs: false,
@@ -291,7 +306,7 @@ const init = () => {
                         permissions: ["notifications"],
                     });
                 }
-            }
+            },
         );
     }
 

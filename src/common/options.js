@@ -6,6 +6,28 @@ const browserApi =
 const browserRef = browserApi; // Keep old variable name compatibility
 
 // ---------------------------------------------------------------------------
+// Tabs permission helpers – the "tabs" permission is optional so existing
+// users are not hit with a scary "browsing history" prompt on update.
+
+const hasTabsPermission = () =>
+    new Promise((resolve) => {
+        if (browserRef.permissions && typeof browserRef.permissions.contains === "function") {
+            browserRef.permissions.contains({ permissions: ["tabs"] }, resolve);
+        } else {
+            resolve(false);
+        }
+    });
+
+const requestTabsPermission = () =>
+    new Promise((resolve) => {
+        if (browserRef.permissions && typeof browserRef.permissions.request === "function") {
+            browserRef.permissions.request({ permissions: ["tabs"] }, resolve);
+        } else {
+            resolve(false);
+        }
+    });
+
+// ---------------------------------------------------------------------------
 // Helpers used also by background script (kept here unchanged in spirit)
 
 const tabQuery = (options, params = {}) =>
@@ -136,13 +158,69 @@ const buildTopDomains = (tabs, maxItems) => {
     return sortedDomains.slice(0, maxItems);
 };
 
-const renderDomainList = (tabs) => {
+const DUMMY_DOMAINS = [
+    { domain: "example.com", count: 8 },
+    { domain: "docs.dev", count: 6 },
+    { domain: "github.com", count: 5 },
+    { domain: "search.com", count: 4 },
+    { domain: "mail.com", count: 3 },
+    { domain: "news.io", count: 2 },
+];
+
+const renderDummyDomainList = (domainListEl) => {
+    domainListEl.textContent = "";
+    const fragment = document.createDocumentFragment();
+
+    for (const { domain, count } of DUMMY_DOMAINS) {
+        const item = document.createElement("li");
+        item.className = "domain-item";
+
+        const domainLabel = document.createElement("span");
+        domainLabel.className = "domain-label";
+
+        const favicon = document.createElement("img");
+        favicon.className = "domain-favicon";
+        favicon.alt = "";
+        favicon.width = 16;
+        favicon.height = 16;
+        favicon.src = "assets/domain.svg";
+
+        const domainName = document.createElement("span");
+        domainName.className = "domain-name";
+        domainName.textContent = domain;
+
+        const countBadge = document.createElement("span");
+        countBadge.className = "count-badge domain-list-badge";
+        countBadge.textContent = count;
+
+        domainLabel.append(favicon, domainName);
+        item.append(domainLabel, countBadge);
+        fragment.append(item);
+    }
+
+    domainListEl.append(fragment);
+};
+
+const renderDomainList = async (tabs) => {
     const domainListEl = document.getElementById("domainList");
     const domainEmptyEl = document.getElementById("domainEmptyState");
+    const domainOverlayEl = document.getElementById("domainPermissionOverlay");
 
-    if (!domainListEl || !domainEmptyEl) {
+    if (!domainListEl) {
         return;
     }
+
+    // Without the "tabs" permission, show dummy list with overlay prompt.
+    const hasPermission = await hasTabsPermission();
+    if (!hasPermission) {
+        renderDummyDomainList(domainListEl);
+        if (domainEmptyEl) domainEmptyEl.classList.add("hidden");
+        if (domainOverlayEl) domainOverlayEl.classList.remove("hidden");
+        return;
+    }
+
+    // Permission granted — hide overlay, render real data.
+    if (domainOverlayEl) domainOverlayEl.classList.add("hidden");
 
     const topDomains = buildTopDomains(tabs, TOP_DOMAINS_LIMIT);
 
@@ -435,7 +513,17 @@ const restoreOptions = () => {
     document.getElementById("footerVersion").textContent = `v${manifest.version}`;
 
     browserRef.storage.sync.get("defaultOptions", (defaults) => {
-        browserRef.storage.sync.get(defaults.defaultOptions, (options) => {
+        browserRef.storage.sync.get(defaults.defaultOptions, async (options) => {
+            // On fresh installs the default has enableDomainLimit: true but the
+            // optional "tabs" permission hasn't been granted yet. Reconcile so
+            // the toggle reflects reality.
+            if (options.enableDomainLimit) {
+                const hasPermission = await hasTabsPermission();
+                if (!hasPermission) {
+                    options.enableDomainLimit = false;
+                    browserRef.storage.sync.set({ enableDomainLimit: false });
+                }
+            }
             applyOptionsToInputs(options);
         });
     });
@@ -455,9 +543,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const enableDomainLimitInput = document.getElementById("enableDomainLimit");
+
+    // "Enable" button inside the domain permission overlay
+    const domainEnableBtn = document.getElementById("domainEnableBtn");
+    if (domainEnableBtn) {
+        domainEnableBtn.addEventListener("click", async () => {
+            const granted = await requestTabsPermission();
+            if (!granted) return;
+
+            // Flip the settings toggle on and persist
+            if (enableDomainLimitInput) enableDomainLimitInput.checked = true;
+            saveOptions();
+            syncDomainFeatureVisibility({ enableDomainLimit: true });
+            scheduleTabCountsUpdate(0);
+        });
+    }
+
     if (enableDomainLimitInput) {
-        enableDomainLimitInput.addEventListener("change", () => {
+        enableDomainLimitInput.addEventListener("change", async () => {
+            if (enableDomainLimitInput.checked) {
+                // Request the optional "tabs" permission when the user enables domain limiting.
+                // This is the only feature that needs access to tab URLs.
+                const granted = await requestTabsPermission();
+                if (!granted) {
+                    // User declined — revert the toggle and persist the change.
+                    enableDomainLimitInput.checked = false;
+                    saveOptions();
+                    syncDomainFeatureVisibility({ enableDomainLimit: false });
+                    scheduleTabCountsUpdate(0);
+                    return;
+                }
+            }
             syncDomainFeatureVisibility({ enableDomainLimit: enableDomainLimitInput.checked });
+            saveOptions();
             scheduleTabCountsUpdate(0);
         });
     }

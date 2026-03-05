@@ -645,3 +645,78 @@ body.colored-favicons-enabled .domain-favicon {
 .footer a:hover {
     color: var(--text-tertiary);
 }
+
+/* Domain permission overlay — shown over the dummy list when "tabs" permission is not granted */
+.domain-list-group {
+    position: relative;
+}
+
+.domain-permission-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    background: linear-gradient(
+        180deg,
+        rgba(31, 41, 55, 0.3) 0%,
+        rgba(31, 41, 55, 0.85) 55%,
+        rgba(31, 41, 55, 0.95) 100%
+    );
+    border-radius: var(--border-radius-sm);
+    z-index: 2;
+}
+
+.domain-permission-overlay.hidden {
+    display: none !important;
+}
+
+.domain-permission-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    text-align: center;
+}
+
+.domain-enable-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 28px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font-family);
+    color: #fff;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+        background-color 0.15s ease-out,
+        transform 0.1s ease-out;
+}
+
+.domain-enable-btn:hover {
+    background: var(--primary-hover);
+}
+
+.domain-enable-btn:active {
+    transform: translateY(0.5px);
+}
+
+.domain-enable-btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.domain-permission-note {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text-quinary);
+    max-width: 180px;
+}

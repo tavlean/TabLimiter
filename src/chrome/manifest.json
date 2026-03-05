@@ -26,7 +26,8 @@
     "background": {
         "service_worker": "background.js"
     },
-    "permissions": ["storage", "notifications", "tabs"],
+    "permissions": ["storage", "notifications"],
+    "optional_permissions": ["tabs"],
 
     "manifest_version": 3
 }
