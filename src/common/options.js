@@ -1,24 +1,66 @@
 /* global chrome, browser */
 
-// Cross-browser API alias (does not throw if `browser` is undefined)
+// Prefer the callback-based `chrome` namespace so popup queries behave the
+// same in Chromium and Firefox, where both namespaces may exist.
 const browserApi =
-    typeof browser !== "undefined" ? browser : typeof chrome !== "undefined" ? chrome : null;
-const browserRef = browserApi; // Keep old variable name compatibility
+    typeof chrome !== "undefined" ? chrome : typeof browser !== "undefined" ? browser : null;
+const browserRef = browserApi;
 
 // ---------------------------------------------------------------------------
 // Helpers used also by background script (kept here unchanged in spirit)
 
-const tabQuery = (options, params = {}) =>
-    new Promise((res) => {
-        if (!options.countPinnedTabs) params.pinned = false; // only non-pinned tabs
-        browserRef.tabs.query(params, (tabs) => res(tabs));
+const invokeBrowserMethod = (apiObject, methodName, ...args) =>
+    new Promise((resolve, reject) => {
+        if (!apiObject || typeof apiObject[methodName] !== "function") {
+            resolve(undefined);
+            return;
+        }
+
+        apiObject[methodName](...args, (result) => {
+            const runtimeError =
+                browserRef && browserRef.runtime && browserRef.runtime.lastError
+                    ? browserRef.runtime.lastError
+                    : null;
+
+            if (runtimeError) {
+                reject(new Error(runtimeError.message));
+                return;
+            }
+
+            resolve(result);
+        });
     });
 
+const queryTabs = async (queryInfo = {}) => {
+    return invokeBrowserMethod(browserRef.tabs, "query", queryInfo);
+};
+
+const filterCountableTabs = (tabs, options) =>
+    (tabs || []).filter((tab) => options.countPinnedTabs || !tab.pinned);
+
+const getNormalWindows = async (populate) => {
+    const windows = await invokeBrowserMethod(browserRef.windows, "getAll", {
+        populate,
+    });
+
+    return (windows || []).filter((window) => !window.type || window.type === "normal");
+};
+
+const getAllCountableTabs = async (options) => {
+    const tabs = await queryTabs({});
+    return filterCountableTabs(tabs, options);
+};
+
+const getFocusedWindowCountableTabs = async (options) => {
+    const tabs = await queryTabs({ currentWindow: true });
+    return filterCountableTabs(tabs, options);
+};
+
 const windowRemaining = (options) =>
-    tabQuery(options, { currentWindow: true }).then((tabs) => options.maxWindow - tabs.length);
+    getFocusedWindowCountableTabs(options).then((tabs) => options.maxWindow - tabs.length);
 
 const totalRemaining = (options) =>
-    tabQuery(options).then((tabs) => options.maxTotal - tabs.length);
+    getAllCountableTabs(options).then((tabs) => options.maxTotal - tabs.length);
 
 // Badge updates are handled by the background script
 const updateBadge = (options) => {
@@ -76,14 +118,12 @@ const applyOptionsToInputs = (options) => {
     syncColoredFaviconsVisibility(options);
 };
 
-const getCurrentOptions = () =>
-    new Promise((resolve) => {
-        browserRef.storage.sync.get("defaultOptions", (defaults) => {
-            browserRef.storage.sync.get(defaults.defaultOptions, (opts) => {
-                resolve(opts);
-            });
-        });
-    });
+const getCurrentOptions = async () => {
+    const defaults = await invokeBrowserMethod(browserRef.storage.sync, "get", "defaultOptions");
+    return invokeBrowserMethod(browserRef.storage.sync, "get", defaults.defaultOptions);
+};
+
+const getTabUrl = (tab) => (tab && (tab.pendingUrl || tab.url)) || null;
 
 const getDomainFromUrl = (url) => {
     if (!url) {
@@ -107,7 +147,7 @@ const buildTopDomains = (tabs, maxItems) => {
     const domainCounts = new Map();
 
     for (const tab of tabs) {
-        const domain = getDomainFromUrl(tab.url);
+        const domain = getDomainFromUrl(getTabUrl(tab));
         if (!domain) {
             continue;
         }
@@ -149,6 +189,63 @@ const renderDomainList = (tabs) => {
     domainListEl.textContent = "";
 
     if (topDomains.length === 0) {
+        domainEmptyEl.classList.remove("hidden");
+        return;
+    }
+
+    domainEmptyEl.classList.add("hidden");
+
+    const fragment = document.createDocumentFragment();
+    for (const { domain, count, faviconUrl } of topDomains) {
+        const item = document.createElement("li");
+        item.className = "domain-item";
+
+        const domainLabel = document.createElement("span");
+        domainLabel.className = "domain-label";
+
+        const favicon = document.createElement("img");
+        favicon.className = "domain-favicon";
+        favicon.alt = "";
+        favicon.width = 16;
+        favicon.height = 16;
+        favicon.src = faviconUrl || "assets/domain.svg";
+
+        favicon.addEventListener("error", () => {
+            if (favicon.dataset.fallbackApplied === "true") {
+                return;
+            }
+            favicon.dataset.fallbackApplied = "true";
+            favicon.src = "assets/domain.svg";
+        });
+
+        const domainName = document.createElement("span");
+        domainName.className = "domain-name";
+        domainName.textContent = domain;
+        domainName.title = domain;
+
+        const countBadge = document.createElement("span");
+        countBadge.className = "count-badge domain-list-badge";
+        countBadge.textContent = count;
+
+        domainLabel.append(favicon, domainName);
+        item.append(domainLabel, countBadge);
+        fragment.append(item);
+    }
+
+    domainListEl.append(fragment);
+};
+
+const renderTopDomains = (topDomains) => {
+    const domainListEl = document.getElementById("domainList");
+    const domainEmptyEl = document.getElementById("domainEmptyState");
+
+    if (!domainListEl || !domainEmptyEl) {
+        return;
+    }
+
+    domainListEl.textContent = "";
+
+    if (!topDomains || topDomains.length === 0) {
         domainEmptyEl.classList.remove("hidden");
         return;
     }
@@ -296,21 +393,17 @@ const updateTabCounts = async () => {
     try {
         const options = await getCurrentOptions();
         syncDomainFeatureVisibility(options);
-
-        // Get global tab count
-        const globalTabs = await tabQuery(options);
+        const [globalTabs, windowTabs, windows] = await Promise.all([
+            getAllCountableTabs(options),
+            getFocusedWindowCountableTabs(options),
+            getNormalWindows(false),
+        ]);
+        const maxTotal = parseInt(options.maxTotal, 10) || 0;
+        const maxWindow = parseInt(options.maxWindow, 10) || 0;
         const globalOpen = globalTabs.length;
-        const globalLeft = Math.max(0, options.maxTotal - globalOpen);
-
-        // Get current window tab count
-        const windowTabs = await tabQuery(options, { currentWindow: true });
+        const globalLeft = Math.max(0, maxTotal - globalOpen);
         const windowOpen = windowTabs.length;
-        const windowLeft = Math.max(0, options.maxWindow - windowOpen);
-
-        // Get window count
-        const windows = await new Promise((resolve) => {
-            browserRef.windows.getAll({ populate: false }, (wins) => resolve(wins));
-        });
+        const windowLeft = Math.max(0, maxWindow - windowOpen);
         const windowCount = windows.length;
 
         // Update progress bars and labels
@@ -354,7 +447,7 @@ const updateTabCounts = async () => {
             windowBadgeEl.textContent = windowCount;
         }
 
-        renderDomainList(globalTabs);
+        renderTopDomains(buildTopDomains(globalTabs, TOP_DOMAINS_LIMIT));
     } catch (error) {
         console.error("Error updating tab counts:", error);
     }
@@ -423,10 +516,14 @@ const saveOptions = () => {
     syncDomainFeatureVisibility(options);
     syncColoredFaviconsVisibility(options);
 
-    browserRef.storage.sync.set(options, () => {
-        updateBadge(options);
-        scheduleTabCountsUpdate(0); // Coalesce UI refreshes across multiple triggers
-    });
+    invokeBrowserMethod(browserRef.storage.sync, "set", options)
+        .then(() => {
+            updateBadge(options);
+            scheduleTabCountsUpdate(0); // Coalesce UI refreshes across multiple triggers
+        })
+        .catch((error) => {
+            console.error("Error saving options:", error);
+        });
 };
 
 // Restore options from storage
@@ -434,11 +531,13 @@ const restoreOptions = () => {
     const manifest = browserRef.runtime.getManifest();
     document.getElementById("footerVersion").textContent = `v${manifest.version}`;
 
-    browserRef.storage.sync.get("defaultOptions", (defaults) => {
-        browserRef.storage.sync.get(defaults.defaultOptions, (options) => {
+    getCurrentOptions()
+        .then((options) => {
             applyOptionsToInputs(options);
+        })
+        .catch((error) => {
+            console.error("Error restoring options:", error);
         });
-    });
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -529,8 +628,14 @@ document.addEventListener("DOMContentLoaded", () => {
     addListenerIfAvailable(browserRef.tabs && browserRef.tabs.onDetached, onTabCountRelevantChange);
 
     addListenerIfAvailable(browserRef.tabs && browserRef.tabs.onUpdated, (_, changeInfo) => {
-        // Counts only change here when pinning state changes and pinned tabs are excluded.
-        if (changeInfo && Object.prototype.hasOwnProperty.call(changeInfo, "pinned")) {
+        if (
+            changeInfo &&
+            (Object.prototype.hasOwnProperty.call(changeInfo, "discarded") ||
+                Object.prototype.hasOwnProperty.call(changeInfo, "favIconUrl") ||
+                Object.prototype.hasOwnProperty.call(changeInfo, "pinned") ||
+                Object.prototype.hasOwnProperty.call(changeInfo, "status") ||
+                Object.prototype.hasOwnProperty.call(changeInfo, "url"))
+        ) {
             scheduleTabCountsUpdate();
         }
     });
@@ -541,6 +646,10 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     addListenerIfAvailable(
         browserRef.windows && browserRef.windows.onRemoved,
+        onTabCountRelevantChange,
+    );
+    addListenerIfAvailable(
+        browserRef.windows && browserRef.windows.onFocusChanged,
         onTabCountRelevantChange,
     );
 
